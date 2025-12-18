@@ -1,10 +1,10 @@
-package ufape.edu.br.go_barber_shop;
+package br.edu.ufape.gobarber;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class GoBarberShopApplicationTests {
+class GoBarberApplicationTests {
 
 	@Test
 	void contextLoads() {
