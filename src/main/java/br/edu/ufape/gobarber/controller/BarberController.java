@@ -1,12 +1,10 @@
 package br.edu.ufape.gobarber.controller;
 
 import br.edu.ufape.gobarber.dto.barber.BarberCreateDTO;
-import br.edu.ufape.gobarber.dto.barber.BarberUpdateDTO;
 import br.edu.ufape.gobarber.dto.barber.BarberServiceDTO;
 import br.edu.ufape.gobarber.dto.barber.BarberWithServiceDTO;
 import br.edu.ufape.gobarber.dto.page.PageBarberDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
-import br.edu.ufape.gobarber.model.Barber;
 import br.edu.ufape.gobarber.service.BarberService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -16,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
 
@@ -46,6 +45,12 @@ public class BarberController {
         return new ResponseEntity<>(newBarber, HttpStatus.CREATED);
     }
 
+    @PostMapping("/create-without-photo")
+    public ResponseEntity<BarberWithServiceDTO> createBarberWithoutPicture(@RequestBody BarberCreateDTO barberCreateDTO) throws DataBaseException {
+        BarberWithServiceDTO barber = barberService.createBarber(barberCreateDTO, null);
+        return new ResponseEntity<>(barber, HttpStatus.CREATED);
+    }
+
     @PostMapping("/service")
     public ResponseEntity<BarberWithServiceDTO> addServiceToBarber(@RequestBody BarberServiceDTO barberServiceDTO) throws DataBaseException {
         BarberWithServiceDTO dto = barberService.addServiceToBarber(barberServiceDTO);
@@ -66,12 +71,12 @@ public class BarberController {
                                                @RequestPart(value = "barber") String barberJson,
                                                @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto) throws DataBaseException {
         ObjectMapper objectMapper = new ObjectMapper();
-        Barber updatedBarber;
+        BarberCreateDTO updatedBarber;
 
         // Registrar o módulo para datas Java 8
         objectMapper.registerModule(new JavaTimeModule());
         try {
-            updatedBarber = objectMapper.readValue(barberJson, Barber.class);
+            updatedBarber = objectMapper.readValue(barberJson, BarberCreateDTO.class);
         } catch (IOException e) {
             throw new RuntimeException("Error parsing JSON", e);
         }
@@ -92,6 +97,23 @@ public class BarberController {
         return new ResponseEntity<>(barber, HttpStatus.OK);
     }
 
+    @GetMapping("/logged-barber")
+    public ResponseEntity<BarberWithServiceDTO> getLoggedBarberInfo(HttpServletRequest request) throws DataBaseException {
+        BarberWithServiceDTO barber = barberService.getBarber(request);
+
+        return new ResponseEntity<>(barber, HttpStatus.OK);
+    }
+
+    @GetMapping("/logged-barber/picture")
+    public ResponseEntity<byte[]> getLoggedBarberProfilePhoto(HttpServletRequest request) throws DataBaseException {
+        return getProfilePhoto(barberService.getProfilePhoto(request));
+    }
+
+    @GetMapping("/{id}/profile-photo")
+    public ResponseEntity<byte[]> getProfilePhoto(@PathVariable Integer id) throws DataBaseException {
+        return getProfilePhoto(barberService.getProfilePhoto(id));
+    }
+
     @GetMapping
     public ResponseEntity<PageBarberDTO> getAllBarbers(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                        @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
@@ -99,9 +121,8 @@ public class BarberController {
         return new ResponseEntity<>(barbers, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/profile-photo")
-    public ResponseEntity<byte[]> getProfilePhoto(@PathVariable Integer id) throws DataBaseException {
-        byte[] image = barberService.getProfilePhoto(id);
+    private ResponseEntity<byte[]> getProfilePhoto(byte[] profilePhoto) throws DataBaseException {
+        byte[] image = profilePhoto;
 
         if (image == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
