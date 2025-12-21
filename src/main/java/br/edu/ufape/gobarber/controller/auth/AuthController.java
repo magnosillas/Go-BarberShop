@@ -1,8 +1,14 @@
 package br.edu.ufape.gobarber.controller.auth;
 
+import br.edu.ufape.gobarber.doc.AuthControllerDoc;
 import br.edu.ufape.gobarber.dto.user.LoginDTO;
+import br.edu.ufape.gobarber.dto.user.UserCreateDTO;
+import br.edu.ufape.gobarber.dto.user.UserDTO;
+import br.edu.ufape.gobarber.exceptions.InvalidRoleException;
+import br.edu.ufape.gobarber.exceptions.UniqueConstraintViolationException;
 import br.edu.ufape.gobarber.model.login.User;
 import br.edu.ufape.gobarber.security.TokenService;
+import br.edu.ufape.gobarber.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,10 +30,12 @@ import java.util.Map;
 @Validated
 @RequiredArgsConstructor
 @Slf4j
-public class AuthController {
+public class AuthController implements AuthControllerDoc {
     private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
+    private final UserService userService;
     
+    @Override
     @PostMapping
     public ResponseEntity<Map<String, String>> auth(@RequestBody @Valid LoginDTO loginDTO) {
         try {
@@ -65,11 +73,32 @@ public class AuthController {
         }
     }
 
+    @Override
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         tokenService.invalidateToken(request);
 
         return ResponseEntity.ok().build();
+    }
+
+    @Override
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody @Valid UserCreateDTO userCreateDTO) {
+        try {
+            log.info("Tentativa de registro para: {}", userCreateDTO.getLogin());
+            UserDTO user = userService.create(userCreateDTO);
+            log.info("Usuário registrado com sucesso: {}", user.getLogin());
+            return new ResponseEntity<>(user, HttpStatus.CREATED);
+        } catch (UniqueConstraintViolationException e) {
+            log.warn("Email já cadastrado: {}", userCreateDTO.getLogin());
+            return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.CONFLICT);
+        } catch (InvalidRoleException e) {
+            log.warn("Role inválida: {}", userCreateDTO.getRole());
+            return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error("Erro ao registrar usuário: {} - {}", e.getClass().getSimpleName(), e.getMessage());
+            return new ResponseEntity<>(Map.of("error", "Erro ao registrar usuário"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 package br.edu.ufape.gobarber.doc;
 
 import br.edu.ufape.gobarber.dto.user.LoginDTO;
+import br.edu.ufape.gobarber.dto.user.UserCreateDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -94,4 +95,56 @@ public interface AuthControllerDoc {
     })
     @PostMapping("/logout")
     ResponseEntity<Void> logout(HttpServletRequest request);
+
+    @Operation(
+            summary = "Registrar novo usuário",
+            description = "Cria um novo usuário no sistema com a role especificada (ADMIN, BARBER, SECRETARY)"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Usuário registrado com sucesso",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                "idUsuario": 1,
+                                                "login": "usuario@email.com"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Email já cadastrado",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                "error": "Usuário já cadastrado com esse email."
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Role inválida",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                "error": "Role não encontrada"
+                                            }
+                                            """
+                            )
+                    )
+            )
+    })
+    @PostMapping("/register")
+    ResponseEntity<?> register(@RequestBody @Valid UserCreateDTO userCreateDTO);
 }
