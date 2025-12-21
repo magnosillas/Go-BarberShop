@@ -1,5 +1,6 @@
 package br.edu.ufape.gobarber.controller;
 
+import br.edu.ufape.gobarber.doc.AppointmentControllerDoc;
 import br.edu.ufape.gobarber.dto.appointment.AppointmentCreateDTO;
 import br.edu.ufape.gobarber.dto.appointment.AppointmentDTO;
 import br.edu.ufape.gobarber.dto.page.PageAppointmentDTO;
@@ -18,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 @RequestMapping("/appointments")
 @Validated
 @Slf4j
-public class AppointmentController {
+public class AppointmentController implements AppointmentControllerDoc {
 
     private final AppointmentService appointmentService;
 

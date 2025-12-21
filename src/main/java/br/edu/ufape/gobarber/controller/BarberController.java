@@ -1,5 +1,6 @@
 package br.edu.ufape.gobarber.controller;
 
+import br.edu.ufape.gobarber.doc.BarberControllerDoc;
 import br.edu.ufape.gobarber.dto.barber.BarberCreateDTO;
 import br.edu.ufape.gobarber.dto.barber.BarberServiceDTO;
 import br.edu.ufape.gobarber.dto.barber.BarberWithServiceDTO;
@@ -22,7 +23,7 @@ import java.io.IOException;
 @RequestMapping("/barber")
 @Validated
 @Slf4j
-public class BarberController {
+public class BarberController implements BarberControllerDoc {
 
     private final BarberService barberService;
 
