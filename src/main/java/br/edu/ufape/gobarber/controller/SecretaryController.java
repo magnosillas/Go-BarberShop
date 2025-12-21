@@ -1,6 +1,5 @@
 package br.edu.ufape.gobarber.controller;
 
-import br.edu.ufape.gobarber.doc.SecretaryControllerDoc;
 import br.edu.ufape.gobarber.dto.page.PageSecretaryDTO;
 import br.edu.ufape.gobarber.dto.secretary.SecretaryCreateDTO;
 import br.edu.ufape.gobarber.dto.secretary.SecretaryDTO;
@@ -9,6 +8,7 @@ import br.edu.ufape.gobarber.exceptions.JsonParsingException;
 import br.edu.ufape.gobarber.service.SecretaryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.validation.annotation.Validated;
@@ -22,7 +22,8 @@ import javax.validation.Valid;
 @RequestMapping("/secretary")
 @Validated
 @Slf4j
-public class SecretaryController implements SecretaryControllerDoc {
+@Tag(name = "Secretárias", description = "Operações de gerenciamento de secretárias")
+public class SecretaryController {
 
     private final SecretaryService secretaryService;
 

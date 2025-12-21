@@ -1,10 +1,10 @@
 package br.edu.ufape.gobarber.controller;
 
-import br.edu.ufape.gobarber.doc.AddressControllerDoc;
 import br.edu.ufape.gobarber.dto.address.AddressCreateDTO;
 import br.edu.ufape.gobarber.model.Address;
 import br.edu.ufape.gobarber.service.AddressService;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/address")
 @RequiredArgsConstructor
-public class AddressController implements AddressControllerDoc {
+@Tag(name = "Endereços", description = "Operações de gerenciamento de endereços")
+public class AddressController {
 
     private final AddressService addressService;
 

@@ -1,11 +1,11 @@
 package br.edu.ufape.gobarber.controller;
 
-import br.edu.ufape.gobarber.doc.ProductStockControllerDoc;
 import br.edu.ufape.gobarber.dto.page.PageStockDTO;
 import br.edu.ufape.gobarber.dto.productStock.ProductStockCreateDTO;
 import br.edu.ufape.gobarber.dto.productStock.ProductStockDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
 import br.edu.ufape.gobarber.service.ProductStockService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,8 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/stock")
 @RequiredArgsConstructor
-public class ProductStockController implements ProductStockControllerDoc {
+@Tag(name = "Estoque de Produtos", description = "Operações de gerenciamento de estoque")
+public class ProductStockController {
 
     private final ProductStockService productStockService;
 

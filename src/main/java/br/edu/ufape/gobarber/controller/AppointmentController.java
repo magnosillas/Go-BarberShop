@@ -1,12 +1,12 @@
 package br.edu.ufape.gobarber.controller;
 
-import br.edu.ufape.gobarber.doc.AppointmentControllerDoc;
 import br.edu.ufape.gobarber.dto.appointment.AppointmentCreateDTO;
 import br.edu.ufape.gobarber.dto.appointment.AppointmentDTO;
 import br.edu.ufape.gobarber.dto.page.PageAppointmentDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
 
 import br.edu.ufape.gobarber.service.AppointmentService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 @RequestMapping("/appointments")
 @Validated
 @Slf4j
-public class AppointmentController implements AppointmentControllerDoc {
+@Tag(name = "Agendamentos", description = "Operações de gerenciamento de agendamentos")
+public class AppointmentController {
 
     private final AppointmentService appointmentService;
 

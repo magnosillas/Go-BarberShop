@@ -1,6 +1,5 @@
 package br.edu.ufape.gobarber.controller;
 
-import br.edu.ufape.gobarber.doc.BarberControllerDoc;
 import br.edu.ufape.gobarber.dto.barber.BarberCreateDTO;
 import br.edu.ufape.gobarber.dto.barber.BarberServiceDTO;
 import br.edu.ufape.gobarber.dto.barber.BarberWithServiceDTO;
@@ -9,6 +8,7 @@ import br.edu.ufape.gobarber.exceptions.DataBaseException;
 import br.edu.ufape.gobarber.service.BarberService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.validation.annotation.Validated;
@@ -23,7 +23,8 @@ import java.io.IOException;
 @RequestMapping("/barber")
 @Validated
 @Slf4j
-public class BarberController implements BarberControllerDoc {
+@Tag(name = "Barbeiros", description = "Operações de gerenciamento de barbeiros")
+public class BarberController {
 
     private final BarberService barberService;
 

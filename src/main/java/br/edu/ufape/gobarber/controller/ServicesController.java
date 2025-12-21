@@ -1,11 +1,11 @@
 package br.edu.ufape.gobarber.controller;
 
-import br.edu.ufape.gobarber.doc.ServicesControllerDoc;
 import br.edu.ufape.gobarber.dto.page.PageServicesDTO;
 import br.edu.ufape.gobarber.dto.services.ServicesCreateDTO;
 import br.edu.ufape.gobarber.dto.services.ServicesDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
 import br.edu.ufape.gobarber.service.ServicesService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -16,7 +16,8 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/services")
 @Validated
-public class ServicesController implements ServicesControllerDoc {
+@Tag(name = "Serviços", description = "Operações de gerenciamento de serviços da barbearia")
+public class ServicesController {
 
     private final ServicesService servicesService;
 
