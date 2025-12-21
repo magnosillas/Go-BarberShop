@@ -1,5 +1,6 @@
 package br.edu.ufape.gobarber.controller;
 
+import br.edu.ufape.gobarber.doc.AddressControllerDoc;
 import br.edu.ufape.gobarber.dto.address.AddressCreateDTO;
 import br.edu.ufape.gobarber.model.Address;
 import br.edu.ufape.gobarber.service.AddressService;
@@ -15,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/address")
 @RequiredArgsConstructor
-public class AddressController {
+public class AddressController implements AddressControllerDoc {
 
     private final AddressService addressService;
 

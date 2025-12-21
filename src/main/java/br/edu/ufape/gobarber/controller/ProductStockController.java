@@ -1,5 +1,6 @@
 package br.edu.ufape.gobarber.controller;
 
+import br.edu.ufape.gobarber.doc.ProductStockControllerDoc;
 import br.edu.ufape.gobarber.dto.page.PageStockDTO;
 import br.edu.ufape.gobarber.dto.productStock.ProductStockCreateDTO;
 import br.edu.ufape.gobarber.dto.productStock.ProductStockDTO;
@@ -15,7 +16,7 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/stock")
 @RequiredArgsConstructor
-public class ProductStockController {
+public class ProductStockController implements ProductStockControllerDoc {
 
     private final ProductStockService productStockService;
 

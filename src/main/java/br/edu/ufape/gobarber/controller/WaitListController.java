@@ -1,5 +1,6 @@
 package br.edu.ufape.gobarber.controller;
 
+import br.edu.ufape.gobarber.doc.WaitListControllerDoc;
 import br.edu.ufape.gobarber.dto.waitlist.WaitListDTO;
 import br.edu.ufape.gobarber.model.WaitList;
 import br.edu.ufape.gobarber.service.WaitListService;
@@ -19,7 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/waitlist")
 @RequiredArgsConstructor
-public class WaitListController {
+public class WaitListController implements WaitListControllerDoc {
 
     private final WaitListService waitListService;
 

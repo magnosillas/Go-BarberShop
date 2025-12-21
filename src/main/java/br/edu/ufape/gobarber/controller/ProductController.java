@@ -1,5 +1,6 @@
 package br.edu.ufape.gobarber.controller;
 
+import br.edu.ufape.gobarber.doc.ProductControllerDoc;
 import br.edu.ufape.gobarber.dto.page.PageProductDTO;
 import br.edu.ufape.gobarber.dto.product.ProductCreateDTO;
 import br.edu.ufape.gobarber.dto.product.ProductDTO;
@@ -15,7 +16,7 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/product")
 @RequiredArgsConstructor
-public class ProductController {
+public class ProductController implements ProductControllerDoc {
 
     private final ProductService productService;
 

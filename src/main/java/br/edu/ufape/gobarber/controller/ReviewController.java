@@ -1,5 +1,6 @@
 package br.edu.ufape.gobarber.controller;
 
+import br.edu.ufape.gobarber.doc.ReviewControllerDoc;
 import br.edu.ufape.gobarber.dto.review.ReviewCreateDTO;
 import br.edu.ufape.gobarber.dto.review.ReviewDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
@@ -20,7 +21,7 @@ import java.util.Map;
 @RequestMapping("/review")
 @RequiredArgsConstructor
 @Tag(name = "Avaliações", description = "API para gerenciamento de avaliações de clientes")
-public class ReviewController {
+public class ReviewController implements ReviewControllerDoc {
 
     private final ReviewService reviewService;
 
