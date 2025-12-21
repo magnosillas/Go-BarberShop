@@ -1,4 +1,4 @@
-package br.edu.ufape.gobarber.exception;
+package br.edu.ufape.gobarber.exceptions;
 
 public class ResourceNotFoundException extends RuntimeException {
 

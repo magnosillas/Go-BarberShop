@@ -6,14 +6,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "address")
+@Entity
+@Table(name = "address")
 public class Address {
 
     @Id

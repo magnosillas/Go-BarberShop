@@ -68,4 +68,27 @@ public class AddressService {
         address.setCep(dto.getCep());
         return address;
     }
+
+    /**
+     * Cria uma entidade Address a partir de um DTO e salva no banco.
+     */
+    @Transactional
+    public Address createAddressEntity(AddressCreateDTO dto) {
+        Address address = convertDTOtoEntity(dto);
+        return addressRepository.save(address);
+    }
+
+    /**
+     * Atualiza uma entidade Address existente com dados de um DTO.
+     */
+    @Transactional
+    public void updateAddressEntity(Address address, AddressCreateDTO dto) {
+        if (dto.getStreet() != null) address.setStreet(dto.getStreet());
+        if (dto.getNumber() != null) address.setNumber(dto.getNumber());
+        if (dto.getNeighborhood() != null) address.setNeighborhood(dto.getNeighborhood());
+        if (dto.getCity() != null) address.setCity(dto.getCity());
+        if (dto.getState() != null) address.setState(dto.getState());
+        if (dto.getCep() != null) address.setCep(dto.getCep());
+        addressRepository.save(address);
+    }
 }

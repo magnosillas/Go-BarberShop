@@ -41,7 +41,7 @@ public class ProductServiceTest {
         ProductDTO result = productService.createProduct(productCreateDTO);
 
         assertNotNull(result);
-        assertEquals("Produto A", result.getNameProduct());
+        assertEquals("Produto A", result.getName());
         verify(productRepository, times(1)).save(any(Product.class));
     }
 
@@ -65,7 +65,7 @@ public class ProductServiceTest {
         ProductDTO result = productService.updateProduct(1, updatedProductDTO);
 
         assertNotNull(result);
-        assertEquals("Produto B", result.getNameProduct());
+        assertEquals("Produto B", result.getName());
         verify(productRepository, times(1)).findById(1);
         verify(productRepository, times(1)).save(any(Product.class));
     }
@@ -106,7 +106,7 @@ public class ProductServiceTest {
         ProductDTO result = productService.getProduct(1);
 
         assertNotNull(result);
-        assertEquals("Produto A", result.getNameProduct());
+        assertEquals("Produto A", result.getName());
     }
 
     @Test
@@ -140,8 +140,8 @@ public class ProductServiceTest {
         Product result = productService.convertDTOtoEntity(productCreateDTO);
 
         assertNotNull(result);
-        assertEquals("Produto A", result.getNameProduct());
-        assertEquals("Marca A", result.getBrandProduct());
-        assertEquals("Descrição A", result.getDescriptionProduct());
+        assertEquals("Produto A", result.getName());
+        assertEquals("Marca A", result.getBrand());
+        assertEquals("Descrição A", result.getDescription());
     }
 }

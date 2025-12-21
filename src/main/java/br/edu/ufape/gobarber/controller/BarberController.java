@@ -32,7 +32,8 @@ public class BarberController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BarberWithServiceDTO> createBarber(@Valid @RequestPart(value = "barber") String barberJson,
-                                               @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto) throws DataBaseException {
+            @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto)
+            throws DataBaseException {
         ObjectMapper objectMapper = new ObjectMapper();
         BarberCreateDTO barber;
         objectMapper.registerModule(new JavaTimeModule());
@@ -46,21 +47,24 @@ public class BarberController {
     }
 
     @PostMapping("/create-without-photo")
-    public ResponseEntity<BarberWithServiceDTO> createBarberWithoutPicture(@RequestBody BarberCreateDTO barberCreateDTO) throws DataBaseException {
+    public ResponseEntity<BarberWithServiceDTO> createBarberWithoutPicture(@RequestBody BarberCreateDTO barberCreateDTO)
+            throws DataBaseException {
         BarberWithServiceDTO barber = barberService.createBarber(barberCreateDTO, null);
         return new ResponseEntity<>(barber, HttpStatus.CREATED);
     }
 
     @PostMapping("/service")
-    public ResponseEntity<BarberWithServiceDTO> addServiceToBarber(@RequestBody BarberServiceDTO barberServiceDTO) throws DataBaseException {
+    public ResponseEntity<BarberWithServiceDTO> addServiceToBarber(@RequestBody BarberServiceDTO barberServiceDTO)
+            throws DataBaseException {
         BarberWithServiceDTO dto = barberService.addServiceToBarber(barberServiceDTO);
 
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
     @PostMapping("/service/remove")
-    public ResponseEntity<BarberWithServiceDTO> removeServiceBarber(@RequestParam(value = "barber", required = true) Integer idBarber,
-                                                                    @RequestParam(value = "service", required = true) Integer idService) throws DataBaseException {
+    public ResponseEntity<BarberWithServiceDTO> removeServiceBarber(
+            @RequestParam(value = "barber", required = true) Integer idBarber,
+            @RequestParam(value = "service", required = true) Integer idService) throws DataBaseException {
         BarberWithServiceDTO barber = barberService.removeServiceFromBarber(idBarber, idService);
 
         return new ResponseEntity<>(barber, HttpStatus.OK);
@@ -68,8 +72,9 @@ public class BarberController {
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BarberWithServiceDTO> updateBarber(@PathVariable Integer id,
-                                               @RequestPart(value = "barber") String barberJson,
-                                               @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto) throws DataBaseException {
+            @RequestPart(value = "barber") String barberJson,
+            @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto)
+            throws DataBaseException {
         ObjectMapper objectMapper = new ObjectMapper();
         BarberCreateDTO updatedBarber;
 
@@ -98,7 +103,8 @@ public class BarberController {
     }
 
     @GetMapping("/logged-barber")
-    public ResponseEntity<BarberWithServiceDTO> getLoggedBarberInfo(HttpServletRequest request) throws DataBaseException {
+    public ResponseEntity<BarberWithServiceDTO> getLoggedBarberInfo(HttpServletRequest request)
+            throws DataBaseException {
         BarberWithServiceDTO barber = barberService.getBarber(request);
 
         return new ResponseEntity<>(barber, HttpStatus.OK);
@@ -115,8 +121,9 @@ public class BarberController {
     }
 
     @GetMapping
-    public ResponseEntity<PageBarberDTO> getAllBarbers(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                       @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
+    public ResponseEntity<PageBarberDTO> getAllBarbers(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
         PageBarberDTO barbers = barberService.getAllBarbers(page, size);
         return new ResponseEntity<>(barbers, HttpStatus.OK);
     }

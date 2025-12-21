@@ -69,4 +69,48 @@ public class EmailService {
         return html;
     }
 
+    /**
+     * Envia um email simples de texto
+     */
+    @Async
+    public void sendEmail(String to, String subject, String content) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom(email);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(content, false);
+
+            javaMailSender.send(mimeMessage);
+            log.info("Email enviado com sucesso para: {}", to);
+        } catch (MessagingException e) {
+            log.error("Erro ao enviar email para {}: {}", to, e.getMessage());
+            throw new RuntimeException("Erro ao enviar email: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Envia um email HTML
+     */
+    @Async
+    public void sendHtmlEmail(String to, String subject, String htmlContent) {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom(email);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            javaMailSender.send(mimeMessage);
+            log.info("Email HTML enviado com sucesso para: {}", to);
+        } catch (MessagingException e) {
+            log.error("Erro ao enviar email HTML para {}: {}", to, e.getMessage());
+            throw new RuntimeException("Erro ao enviar email HTML: " + e.getMessage());
+        }
+    }
+
 }

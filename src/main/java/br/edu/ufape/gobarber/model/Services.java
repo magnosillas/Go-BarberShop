@@ -14,25 +14,26 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "service")
+@Entity
+@Table(name = "service")
 public class Services {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_service")
-    private Integer idService;
+    private Integer id;
 
     @Column(name = "name_service")
-    private String nameService;
+    private String name;
 
     @Column(name = "description_service")
-    private String descriptionService;
+    private String description;
 
     @Column(name = "price_service")
-    private double valueService;
+    private double value;
 
     @Column(name = "time_service")
-    private LocalTime timeService;
+    private LocalTime time;
 
     @ManyToMany(mappedBy = "services")
     @JsonIgnore

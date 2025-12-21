@@ -12,19 +12,19 @@ import lombok.Setter;
 @Setter
 public class ProductDTO {
 
-    private Integer idProduct;
+    private Integer id;
 
     @Schema(description = "Nome do produto", example = "Pomada capilar")
-    private String nameProduct;
+    private String name;
 
     @Schema(description = "Marca do produto", example = "For men")
-    private String brandProduct;
+    private String brand;
 
-    @Schema(description = "Descrição do produto", example = "Pomada desenvolvida por cientistas para alisaro cabelo")
-    private String descriptionProduct;
+    @Schema(description = "Descrição do produto", example = "Pomada desenvolvida por cientistas para alisar o cabelo")
+    private String description;
 
     @Schema(description = "Preço do produto", example = "29")
-    private double priceProduct;
+    private double price;
 
     @Schema(description = "Tamanho do produto", example = "50g")
     private String size;

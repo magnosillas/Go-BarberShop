@@ -7,15 +7,26 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "appointment")
+@Entity
+@Table(name = "appointment")
 public class Appointment {
+        public LocalDateTime getStartTime() {
+            return this.startTime;
+        }
+
+        public Barber getBarber() {
+            return this.barber;
+        }
+
+        public Double getTotalPrice() {
+            return this.totalPrice;
+        }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_appointment")

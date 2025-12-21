@@ -28,14 +28,16 @@ public class AppointmentController {
 
     // Criar novo agendamento
     @PostMapping
-    public ResponseEntity<AppointmentDTO> createAppointment(@RequestBody AppointmentCreateDTO appointment) throws DataBaseException {
+    public ResponseEntity<AppointmentDTO> createAppointment(@RequestBody AppointmentCreateDTO appointment)
+            throws DataBaseException {
         AppointmentDTO savedAppointment = appointmentService.saveAppointment(appointment);
         return ResponseEntity.ok(savedAppointment);
     }
 
     // Atualizar agendamento existente
     @PutMapping("/{id}")
-    public ResponseEntity<AppointmentDTO> updateAppointment(@PathVariable Integer id, @RequestBody AppointmentCreateDTO appointment) throws DataBaseException {
+    public ResponseEntity<AppointmentDTO> updateAppointment(@PathVariable Integer id,
+            @RequestBody AppointmentCreateDTO appointment) throws DataBaseException {
         AppointmentDTO appointmentDTO = appointmentService.updateAppointment(id, appointment);
         return new ResponseEntity<>(appointmentDTO, HttpStatus.OK);
     }
@@ -49,8 +51,9 @@ public class AppointmentController {
 
     // Obter todos os agendamentos
     @GetMapping
-    public ResponseEntity<PageAppointmentDTO> getAllAppointments(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                 @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz) {
+    public ResponseEntity<PageAppointmentDTO> getAllAppointments(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz) {
         PageAppointmentDTO appointments = appointmentService.getAllAppointments(page, siz);
         return ResponseEntity.ok(appointments);
     }
@@ -58,52 +61,57 @@ public class AppointmentController {
     // Obter agendamentos por barbeiro
     @GetMapping("/barber/{barberId}")
     public ResponseEntity<PageAppointmentDTO> getAppointmentsByBarber(@PathVariable Integer barberId,
-                                                                      @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                      @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz) throws DataBaseException {
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz) throws DataBaseException {
         PageAppointmentDTO appointments = appointmentService.getAppointmentsByBarber(barberId, page, siz);
         return ResponseEntity.ok(appointments);
     }
 
     @GetMapping("/history/barber")
-    public ResponseEntity<PageAppointmentDTO> getHistory(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                         @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz,
-                                                         @RequestParam(value = "barberId") Integer barberId) throws DataBaseException {
+    public ResponseEntity<PageAppointmentDTO> getHistory(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz,
+            @RequestParam(value = "barberId") Integer barberId) throws DataBaseException {
 
         PageAppointmentDTO appointmentDTO = appointmentService.getHistoryByBarber(page, siz, barberId);
         return new ResponseEntity<>(appointmentDTO, HttpStatus.OK);
     }
 
     @GetMapping("/history")
-    public ResponseEntity<PageAppointmentDTO> getHistoryFromToken(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                    @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz,
-                                                                  HttpServletRequest request) throws DataBaseException {
+    public ResponseEntity<PageAppointmentDTO> getHistoryFromToken(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz,
+            HttpServletRequest request) throws DataBaseException {
 
         PageAppointmentDTO appointmentDTO = appointmentService.getHistoryFromToken(page, siz, request);
         return new ResponseEntity<>(appointmentDTO, HttpStatus.OK);
     }
 
     @GetMapping("/future")
-    public ResponseEntity<PageAppointmentDTO> getFutureAppointments(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                    @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz){
+    public ResponseEntity<PageAppointmentDTO> getFutureAppointments(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz) {
 
         PageAppointmentDTO appointmentDTO = appointmentService.getFutureAppointments(page, siz);
         return new ResponseEntity<>(appointmentDTO, HttpStatus.OK);
     }
 
     @GetMapping("/future/barber")
-    public ResponseEntity<PageAppointmentDTO> getFutureAppointmentsByBarber(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                            @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz,
-                                                                            @RequestParam(value = "barberId") Integer barberId)
-                                                                            throws DataBaseException {
+    public ResponseEntity<PageAppointmentDTO> getFutureAppointmentsByBarber(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz,
+            @RequestParam(value = "barberId") Integer barberId)
+            throws DataBaseException {
 
         PageAppointmentDTO appointmentDTO = appointmentService.getFutureAppointments(page, siz, barberId);
         return new ResponseEntity<>(appointmentDTO, HttpStatus.OK);
     }
 
     @GetMapping("/future/barber/own")
-    public ResponseEntity<PageAppointmentDTO> getFutureAppointmentsByBarber(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                                            @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz,
-                                                                            HttpServletRequest request) throws DataBaseException {
+    public ResponseEntity<PageAppointmentDTO> getFutureAppointmentsByBarber(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer siz,
+            HttpServletRequest request) throws DataBaseException {
 
         PageAppointmentDTO appointmentDTO = appointmentService.getFutureAppointments(page, siz, request);
         return new ResponseEntity<>(appointmentDTO, HttpStatus.OK);

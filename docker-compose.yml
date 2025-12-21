@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 🐘 PostgreSQL Database
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: gobarber-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gobarber
+      POSTGRES_USER: ${DB_USER:-gobarber}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-gobarber123}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql:ro
+      - ./docker/seed-data.sql:/seed-data.sql:ro
+    networks:
+      - gobarber-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-gobarber} -d gobarber"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # ☕ GoBarber API (Spring Boot)
+  # ==========================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gobarber-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database Configuration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gobarber
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-gobarber}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-gobarber123}
+      
+      # JPA/Hibernate
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: gobarber
+      
+      # Email Configuration (opcional)
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-gobarber-secret-key-change-in-production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      
+      # Java Options
+      JAVA_OPTS: "-Xms256m -Xmx512m"
+    ports:
+      - "${API_PORT:-8080}:8080"
+    networks:
+      - gobarber-network
+
+  # ==========================================
+  # 🔧 pgAdmin (Opcional - Interface Gráfica)
+  # ==========================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: gobarber-pgadmin
+    restart: unless-stopped
+    profiles:
+      - tools
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@gobarber.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - postgres
+    networks:
+      - gobarber-network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+# ==========================================
+# 📦 Volumes
+# ==========================================
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+# ==========================================
+# 🌐 Networks
+# ==========================================
+networks:
+  gobarber-network:
+    driver: bridge

@@ -28,21 +28,23 @@ public class SaleController implements SaleControllerDoc {
     }
 
     @PostMapping("/email/notify")
-    public ResponseEntity<Void> sendSaleEmail(@RequestParam(value = "idSale") Integer idSale)  {
+    public ResponseEntity<Void> sendSaleEmail(@RequestParam(value = "idSale") Integer idSale) {
 
         saleService.sendPromotionalEmail(idSale);
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping
-    public ResponseEntity<SaleDTO> createSale(@Valid @RequestBody SaleCreateDTO saleCreateDTO) throws DataBaseException, DataBaseConstraintException {
+    public ResponseEntity<SaleDTO> createSale(@Valid @RequestBody SaleCreateDTO saleCreateDTO)
+            throws DataBaseException, DataBaseConstraintException {
 
         SaleDTO saleDTO = saleService.createSale(saleCreateDTO);
         return new ResponseEntity<>(saleDTO, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SaleDTO> updateSale(@Valid @RequestBody SaleCreateDTO saleCreateDTO, @PathVariable Integer id) throws DataBaseException {
+    public ResponseEntity<SaleDTO> updateSale(@Valid @RequestBody SaleCreateDTO saleCreateDTO, @PathVariable Integer id)
+            throws DataBaseException {
 
         SaleDTO saleDTO = saleService.updateSale(id, saleCreateDTO);
         return new ResponseEntity<>(saleDTO, HttpStatus.OK);
@@ -56,14 +58,16 @@ public class SaleController implements SaleControllerDoc {
     }
 
     @GetMapping
-    public ResponseEntity<PageSaleDTO> getAllSales(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                   @RequestParam(value = "size", required = false, defaultValue = "10")Integer size){
+    public ResponseEntity<PageSaleDTO> getAllSales(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
         return new ResponseEntity<>(saleService.getAllSales(page, size), HttpStatus.OK);
     }
 
     @GetMapping("/valid")
-    public ResponseEntity<PageSaleDTO> getAllValidSales(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                        @RequestParam(value = "size", required = false, defaultValue = "10")Integer size){
+    public ResponseEntity<PageSaleDTO> getAllValidSales(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
         return new ResponseEntity<>(saleService.getAllValidSales(page, size), HttpStatus.OK);
     }
 

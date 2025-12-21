@@ -13,25 +13,26 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "product")
+@Entity
+@Table(name = "product")
 public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_product")
-    private Integer idProduct;
+    private Integer id;
 
     @Column(name = "name_product")
-    private String nameProduct;
+    private String name;
 
     @Column(name = "brand_product")
-    private String brandProduct;
+    private String brand;
 
     @Column(name = "description")
-    private String descriptionProduct;
+    private String description;
 
     @Column(name = "price_product")
-    private double priceProduct;
+    private double price;
 
     @Column(name = "size")
     private String size;
@@ -40,12 +41,12 @@ public class Product {
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private Set<ProductStock> productStocks;
 
-    public Product(Integer id, String nameProduct, String brandProduct, String descriptionProduct, double priceProduct, String size) {
-        this.idProduct = id;
-        this.nameProduct = nameProduct;
-        this.brandProduct = brandProduct;
-        this.descriptionProduct = descriptionProduct;
-        this.priceProduct = priceProduct;
+    public Product(Integer id, String name, String brand, String description, double price, String size) {
+        this.id = id;
+        this.name = name;
+        this.brand = brand;
+        this.description = description;
+        this.price = price;
         this.size = size;
     }
 

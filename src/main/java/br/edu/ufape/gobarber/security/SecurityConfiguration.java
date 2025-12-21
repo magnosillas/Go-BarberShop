@@ -41,6 +41,24 @@ public class SecurityConfiguration {
                         .antMatchers("/address/**").hasAnyRole("ADMIN", "BARBER")
                         .antMatchers("/appointments/history", "/appointments/future/barber/own").hasRole("BARBER")
                         .antMatchers("/appointments/**").hasAnyRole("ADMIN", "SECRETARY", "BARBER")
+                        // Waitlist - gerenciada por secretárias e admin
+                        .antMatchers("/waitlist/**").hasAnyRole("ADMIN", "SECRETARY")
+                        // Reviews - admin modera, barbeiros podem ver
+                        .antMatchers(HttpMethod.GET, "/review/**").hasAnyRole("ADMIN", "BARBER", "SECRETARY")
+                        .antMatchers("/review/**").hasRole("ADMIN")
+                        // Barber Schedule - barbeiros e admin
+                        .antMatchers("/barber-schedule/**").hasAnyRole("ADMIN", "BARBER")
+                        // Client - admin e secretárias gerenciam clientes
+                        .antMatchers(HttpMethod.GET, "/client/**").hasAnyRole("ADMIN", "SECRETARY", "BARBER")
+                        .antMatchers("/client/**").hasAnyRole("ADMIN", "SECRETARY")
+                        // Payment - admin e secretárias gerenciam pagamentos
+                        .antMatchers(HttpMethod.GET, "/payment/**").hasAnyRole("ADMIN", "SECRETARY", "BARBER")
+                        .antMatchers("/payment/**").hasAnyRole("ADMIN", "SECRETARY")
+                        // Dashboard - admin e secretárias podem ver
+                        .antMatchers("/dashboard/**").hasAnyRole("ADMIN", "SECRETARY")
+                        // Notification - todos autenticados podem ver suas notificações
+                        .antMatchers(HttpMethod.GET, "/notification/client/**").hasAnyRole("ADMIN", "SECRETARY", "BARBER")
+                        .antMatchers("/notification/**").hasAnyRole("ADMIN", "SECRETARY")
                         .anyRequest().denyAll()
                 );
 

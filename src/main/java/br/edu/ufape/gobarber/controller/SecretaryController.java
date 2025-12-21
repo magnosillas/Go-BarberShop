@@ -1,17 +1,11 @@
 package br.edu.ufape.gobarber.controller;
 
-import br.edu.ufape.gobarber.dto.barber.BarberCreateDTO;
-import br.edu.ufape.gobarber.dto.barber.BarberServiceDTO;
-import br.edu.ufape.gobarber.dto.barber.BarberWithServiceDTO;
-import br.edu.ufape.gobarber.dto.page.PageBarberDTO;
 import br.edu.ufape.gobarber.dto.page.PageSecretaryDTO;
 import br.edu.ufape.gobarber.dto.secretary.SecretaryCreateDTO;
 import br.edu.ufape.gobarber.dto.secretary.SecretaryDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
 import br.edu.ufape.gobarber.exceptions.JsonParsingException;
-import br.edu.ufape.gobarber.service.BarberService;
 import br.edu.ufape.gobarber.service.SecretaryService;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/secretary")

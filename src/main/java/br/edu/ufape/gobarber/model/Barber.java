@@ -14,8 +14,16 @@ import java.util.Set;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "barber")
+@Entity
+@Table(name = "barber")
 public class Barber {
+
+    @Column(name = "active", columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private Boolean active = true;
+
+    public Boolean getActive() {
+        return this.active;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

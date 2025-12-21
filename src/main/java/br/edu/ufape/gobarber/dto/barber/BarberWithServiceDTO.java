@@ -2,7 +2,6 @@ package br.edu.ufape.gobarber.dto.barber;
 
 import br.edu.ufape.gobarber.dto.services.ServicesDTO;
 import br.edu.ufape.gobarber.model.Address;
-import br.edu.ufape.gobarber.model.Services;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +9,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.Set;
 
 @AllArgsConstructor

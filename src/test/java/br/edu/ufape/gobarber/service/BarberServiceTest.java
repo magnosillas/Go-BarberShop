@@ -19,21 +19,18 @@ public class BarberServiceTest {
     @Test
     public void testBarberCreation() {
         Address address = new Address(1, "Rua A", 123, "Bairro B", "Cidade C", "Estado D", "12345-678");
-        Barber barber = new Barber(
-                1, // idBarber
-                "João", // name
-                "123.456.789-00", // cpf
-                address, // address
-                3000.0, // salary
-                LocalDate.of(2022, 1, 15), // admissionDate
-                new byte[]{0, 1, 2, 3, 4, 5}, // profilePhoto
-                40, // workload
-                "11-98765-4321", // contato
-                LocalTime.of(8, 0), // start
-                LocalTime.of(17, 0), // end
-                null, // user
-                null // services
-        );
+        Barber barber = new Barber();
+        barber.setIdBarber(1);
+        barber.setName("João");
+        barber.setCpf("123.456.789-00");
+        barber.setAddress(address);
+        barber.setSalary(3000.0);
+        barber.setAdmissionDate(LocalDate.of(2022, 1, 15));
+        barber.setProfilePhoto(new byte[]{0, 1, 2, 3, 4, 5});
+        barber.setWorkload(40);
+        barber.setContato("11-98765-4321");
+        barber.setStart(LocalTime.of(8, 0));
+        barber.setEnd(LocalTime.of(17, 0));
 
         assertEquals(1, barber.getIdBarber());
         assertEquals("João", barber.getName());
@@ -56,25 +53,20 @@ public class BarberServiceTest {
 
     @Test
     public void testBarberCreationWithoutProfilePhoto() {
-
-        Address address = new Address(1, "Rua A", 123, "Bairro B", "Cidade C", "Estado D", "12345-678");
-        Barber barber = new Barber(
-                1, // idBarber
-                "João Silva", // name
-                "123.456.789-00", // cpf
-                address, // address
-                3000.0, // salary
-                LocalDate.of(2022, 1, 15), // admissionDate
-                null, // profilePhoto
-                40, // workload
-                "11-98765-4321", // contato
-                LocalTime.of(8, 0), // start
-                LocalTime.of(17, 0), // end
-                null, // user
-                null // services
-        );
-
-        assertNull(barber.getProfilePhoto());
+    Address address = new Address(1, "Rua A", 123, "Bairro B", "Cidade C", "Estado D", "12345-678");
+    Barber barber = new Barber();
+    barber.setIdBarber(1);
+    barber.setName("João Silva");
+    barber.setCpf("123.456.789-00");
+    barber.setAddress(address);
+    barber.setSalary(3000.0);
+    barber.setAdmissionDate(LocalDate.of(2022, 1, 15));
+    barber.setProfilePhoto(null);
+    barber.setWorkload(40);
+    barber.setContato("11-98765-4321");
+    barber.setStart(LocalTime.of(8, 0));
+    barber.setEnd(LocalTime.of(17, 0));
+    assertNull(barber.getProfilePhoto());
     }
 
     @Test

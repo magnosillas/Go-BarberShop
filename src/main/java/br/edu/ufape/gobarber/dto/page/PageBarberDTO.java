@@ -1,7 +1,6 @@
 package br.edu.ufape.gobarber.dto.page;
 
 import br.edu.ufape.gobarber.dto.barber.BarberWithServiceDTO;
-import br.edu.ufape.gobarber.dto.productStock.ProductStockDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

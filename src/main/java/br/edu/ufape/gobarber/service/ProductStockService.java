@@ -1,9 +1,6 @@
 package br.edu.ufape.gobarber.service;
 
-import br.edu.ufape.gobarber.dto.page.PageProductDTO;
 import br.edu.ufape.gobarber.dto.page.PageStockDTO;
-import br.edu.ufape.gobarber.dto.product.ProductCreateDTO;
-import br.edu.ufape.gobarber.dto.product.ProductDTO;
 import br.edu.ufape.gobarber.dto.productStock.ProductStockCreateDTO;
 import br.edu.ufape.gobarber.dto.productStock.ProductStockDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
@@ -97,7 +94,7 @@ public class ProductStockService {
     private ProductStockDTO convertStockToDTO(ProductStock productStock) {
         ProductStockDTO productStockDTO = new ProductStockDTO();
         productStockDTO.setIdStock(productStock.getIdStock());
-        productStockDTO.setIdProduct(productStock.getProduct().getIdProduct());
+        productStockDTO.setIdProduct(productStock.getProduct().getId());
         productStockDTO.setQuantity(productStock.getQuantity());
         productStockDTO.setBatchNumber(productStock.getBatchNumber());
         productStockDTO.setExpirationDate(productStock.getExpirationDate());

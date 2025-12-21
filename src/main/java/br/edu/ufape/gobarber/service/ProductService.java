@@ -5,7 +5,6 @@ import br.edu.ufape.gobarber.dto.product.ProductCreateDTO;
 import br.edu.ufape.gobarber.dto.product.ProductDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
 import br.edu.ufape.gobarber.model.Product;
-import br.edu.ufape.gobarber.model.ProductStock;
 import br.edu.ufape.gobarber.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,10 +38,10 @@ public class ProductService {
     public ProductDTO updateProduct(Integer id, ProductCreateDTO updatedProductDTO) throws DataBaseException{
         Product product = productRepository.findById(id).orElseThrow(() -> new DataBaseException("Produto não encontrado no banco de dados."));
 
-        product.setNameProduct(updatedProductDTO.getNameProduct());
-        product.setBrandProduct(updatedProductDTO.getBrandProduct());
-        product.setDescriptionProduct(updatedProductDTO.getDescriptionProduct());
-        product.setPriceProduct(updatedProductDTO.getPriceProduct());
+        product.setName(updatedProductDTO.getName());
+        product.setBrand(updatedProductDTO.getBrand());
+        product.setDescription(updatedProductDTO.getDescription());
+        product.setPrice(updatedProductDTO.getPrice());
         product.setSize(updatedProductDTO.getSize());
 
         product = productRepository.save(product);
@@ -81,10 +80,10 @@ public class ProductService {
 
     protected Product convertDTOtoEntity(ProductCreateDTO productCreateDTO) {
         Product product = new Product();
-        product.setNameProduct(productCreateDTO.getNameProduct());
-        product.setBrandProduct(productCreateDTO.getBrandProduct());
-        product.setDescriptionProduct(productCreateDTO.getDescriptionProduct());
-        product.setPriceProduct(productCreateDTO.getPriceProduct());
+        product.setName(productCreateDTO.getName());
+        product.setBrand(productCreateDTO.getBrand());
+        product.setDescription(productCreateDTO.getDescription());
+        product.setPrice(productCreateDTO.getPrice());
         product.setSize(productCreateDTO.getSize());
 
         return product;
@@ -92,11 +91,11 @@ public class ProductService {
 
     private ProductDTO convertEntityToDTO(Product product) {
         ProductDTO productDTO = new ProductDTO();
-        productDTO.setIdProduct(product.getIdProduct());
-        productDTO.setNameProduct(product.getNameProduct());
-        productDTO.setBrandProduct(product.getBrandProduct());
-        productDTO.setDescriptionProduct(product.getDescriptionProduct());
-        productDTO.setPriceProduct(product.getPriceProduct());
+        productDTO.setId(product.getId());
+        productDTO.setName(product.getName());
+        productDTO.setBrand(product.getBrand());
+        productDTO.setDescription(product.getDescription());
+        productDTO.setPrice(product.getPrice());
         productDTO.setSize(product.getSize());
 
         return productDTO;

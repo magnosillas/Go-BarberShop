@@ -2,17 +2,15 @@ package br.edu.ufape.gobarber.controller.auth;
 
 import br.edu.ufape.gobarber.dto.user.LoginDTO;
 import br.edu.ufape.gobarber.model.login.User;
-import br.edu.ufape.gobarber.repository.RoleRepository;
-import br.edu.ufape.gobarber.repository.UserRepository;
 import br.edu.ufape.gobarber.security.TokenService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +23,7 @@ import java.util.Map;
 @RequestMapping("/auth")
 @Validated
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
     private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
@@ -32,6 +31,8 @@ public class AuthController {
     @PostMapping
     public ResponseEntity<Map<String, String>> auth(@RequestBody @Valid LoginDTO loginDTO) {
         try {
+            log.info("Tentativa de login para: {}", loginDTO.getLogin());
+            
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                     new UsernamePasswordAuthenticationToken(
                             loginDTO.getLogin(),
@@ -43,6 +44,7 @@ public class AuthController {
                             usernamePasswordAuthenticationToken);
 
             User validatedUser = (User) authentication.getPrincipal();
+            log.info("Usuário autenticado: {}", validatedUser.getLogin());
 
             String jwt = tokenService.gerarTokenJwt(validatedUser);
             String role = validatedUser.getRole().getAuthority();
@@ -55,8 +57,10 @@ public class AuthController {
             return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
 
         }catch (BadCredentialsException e) {
+            log.warn("Credenciais inválidas para: {}", loginDTO.getLogin());
             return new ResponseEntity<>(Map.of("error", "Email ou senha inválidos"), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
+            log.error("Erro de autenticação: {} - {}", e.getClass().getSimpleName(), e.getMessage());
             return new ResponseEntity<>(Map.of("error", "Falha de Autenticação, Tente Novamente!"), HttpStatus.FORBIDDEN);
         }
     }

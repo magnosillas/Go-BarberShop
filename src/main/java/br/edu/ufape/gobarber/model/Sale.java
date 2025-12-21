@@ -12,8 +12,24 @@ import java.time.LocalDate;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "sale")
+@Entity
+@Table(name = "sale")
 public class Sale {
+    public String getName() {
+        return this.name;
+    }
+
+    public double getTotalPrice() {
+        return this.totalPrice;
+    }
+
+    public String getCoupon() {
+        return this.coupon;
+    }
+
+    public LocalDate getEndDate() {
+        return this.endDate;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

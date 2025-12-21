@@ -1,0 +1,67 @@
+# ==========================================
+# 🐳 Docker Ignore - GoBarber
+# ==========================================
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Build outputs
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+
+# Logs
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Maven
+.mvn/repository/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Documentation
+*.md
+!README.md
+docs/
+Documents/
+
+# Test files
+src/test/
+*.test.js
+*.spec.js
+
+# Misc
+*.bak
+*.tmp
+*.swp
+*~
+
+# Docker files (não copiar para dentro do container)
+docker-compose*.yml
+Dockerfile*
+
+# Base for refactor (pasta de backup)
+base_for_refactor/

@@ -1,7 +1,5 @@
 package br.edu.ufape.gobarber.model.login;
 
-import br.edu.ufape.gobarber.model.Barber;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +13,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity(name = "Employee")
+@Entity
+@Table(name = "employee")
 public class User implements UserDetails {
 
     @Id

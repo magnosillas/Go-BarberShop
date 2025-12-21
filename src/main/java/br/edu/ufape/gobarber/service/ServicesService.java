@@ -27,15 +27,15 @@ public class ServicesService {
     @Transactional
     public ServicesDTO createServices(@Valid ServicesCreateDTO servicesCreateDTO) {
         // Verifica se o serviço já existe pelo nome
-        if (servicesRepository.existsByNameService(servicesCreateDTO.getName())) {
+        if (servicesRepository.existsByName(servicesCreateDTO.getName())) {
             throw new ServiceAlreadyExistsException("Serviço já cadastrado com o nome: " + servicesCreateDTO.getName());
         }
 
         Services services = new Services();
-        services.setNameService(servicesCreateDTO.getName());
-        services.setDescriptionService(servicesCreateDTO.getDescription());
-        services.setValueService(servicesCreateDTO.getValue());
-        services.setTimeService(convertIntegerToTime(servicesCreateDTO.getTime()));
+        services.setName(servicesCreateDTO.getName());
+        services.setDescription(servicesCreateDTO.getDescription());
+        services.setValue(servicesCreateDTO.getValue());
+        services.setTime(convertIntegerToTime(servicesCreateDTO.getTime()));
 
         services = servicesRepository.save(services);
 
@@ -46,10 +46,10 @@ public class ServicesService {
     public ServicesDTO updateServices(Integer id, ServicesCreateDTO servicesCreateDTO) throws DataBaseException {
         Services services = servicesRepository.findById(id)
                 .orElseThrow(() -> new DataBaseException("Serviço não encontrado no banco de dados!"));
-        services.setNameService(servicesCreateDTO.getName());
-        services.setDescriptionService(servicesCreateDTO.getDescription());
-        services.setValueService(servicesCreateDTO.getValue());
-        services.setTimeService(convertIntegerToTime(servicesCreateDTO.getTime()));
+        services.setName(servicesCreateDTO.getName());
+        services.setDescription(servicesCreateDTO.getDescription());
+        services.setValue(servicesCreateDTO.getValue());
+        services.setTime(convertIntegerToTime(servicesCreateDTO.getTime()));
 
         services = servicesRepository.save(services);
 
@@ -90,11 +90,11 @@ public class ServicesService {
 
     protected ServicesDTO convertServicesToDTO(Services services) {
         ServicesDTO servicesDTO = new ServicesDTO();
-        servicesDTO.setId(services.getIdService());
-        servicesDTO.setName(services.getNameService());
-        servicesDTO.setDescription(services.getDescriptionService());
-        servicesDTO.setValue(services.getValueService());
-        servicesDTO.setTime(convertTimeToInteger(services.getTimeService()));
+        servicesDTO.setId(services.getId());
+        servicesDTO.setName(services.getName());
+        servicesDTO.setDescription(services.getDescription());
+        servicesDTO.setValue(services.getValue());
+        servicesDTO.setTime(convertTimeToInteger(services.getTime()));
 
         return servicesDTO;
     }

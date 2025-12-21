@@ -30,7 +30,8 @@ public class ServicesController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ServicesDTO> updateServices(@Valid @RequestBody ServicesCreateDTO servicesCreateDTO, @PathVariable Integer id) throws DataBaseException {
+    public ResponseEntity<ServicesDTO> updateServices(@Valid @RequestBody ServicesCreateDTO servicesCreateDTO,
+            @PathVariable Integer id) throws DataBaseException {
 
         ServicesDTO servicesDTO = servicesService.updateServices(id, servicesCreateDTO);
         return new ResponseEntity<>(servicesDTO, HttpStatus.OK);
@@ -49,8 +50,9 @@ public class ServicesController {
     }
 
     @GetMapping
-    public ResponseEntity<PageServicesDTO> getAllServices(@RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                          @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
+    public ResponseEntity<PageServicesDTO> getAllServices(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
         PageServicesDTO services = servicesService.getAllServices(page, size);
         return new ResponseEntity<>(services, HttpStatus.OK);
     }

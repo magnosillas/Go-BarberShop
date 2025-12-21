@@ -201,7 +201,8 @@ public class SaleService {
     }
 
     public void sendPromotionalEmail(Integer idSale) {
-        Sale sale = saleRepository.getById(idSale);
+        Sale sale = saleRepository.findById(idSale)
+                .orElseThrow(() -> new RuntimeException("Promoção não encontrada com o id: " + idSale));
 
         SaleEmailDTO saleEmailDTO = new SaleEmailDTO(sale.getName(), sale.getTotalPrice(), sale.getCoupon(), sale.getEndDate());
 
