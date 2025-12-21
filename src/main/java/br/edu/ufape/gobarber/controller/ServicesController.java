@@ -1,5 +1,6 @@
 package br.edu.ufape.gobarber.controller;
 
+import br.edu.ufape.gobarber.doc.ServicesControllerDoc;
 import br.edu.ufape.gobarber.dto.page.PageServicesDTO;
 import br.edu.ufape.gobarber.dto.services.ServicesCreateDTO;
 import br.edu.ufape.gobarber.dto.services.ServicesDTO;
@@ -15,7 +16,7 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/services")
 @Validated
-public class ServicesController {
+public class ServicesController implements ServicesControllerDoc {
 
     private final ServicesService servicesService;
 

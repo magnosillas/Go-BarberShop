@@ -1,5 +1,6 @@
 package br.edu.ufape.gobarber.controller;
 
+import br.edu.ufape.gobarber.doc.SecretaryControllerDoc;
 import br.edu.ufape.gobarber.dto.page.PageSecretaryDTO;
 import br.edu.ufape.gobarber.dto.secretary.SecretaryCreateDTO;
 import br.edu.ufape.gobarber.dto.secretary.SecretaryDTO;
@@ -21,7 +22,7 @@ import javax.validation.Valid;
 @RequestMapping("/secretary")
 @Validated
 @Slf4j
-public class SecretaryController {
+public class SecretaryController implements SecretaryControllerDoc {
 
     private final SecretaryService secretaryService;
 
