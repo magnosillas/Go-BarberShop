@@ -17,7 +17,7 @@
 
 ## 📋 Sobre o Projeto
 
-O **GoBarber** é uma API REST completa para gerenciamento de barbearias, desenvolvida como projeto acadêmico para a disciplina de **Engenharia de Software** da **UFAPE**.
+O **GoBarber** é uma API REST completa para gerenciamento de barbearias, desenvolvida como projeto acadêmico para a disciplina de **Programação Web** da **UFAPE**.
 
 ### ✨ Principais Funcionalidades
 
@@ -34,8 +34,6 @@ O **GoBarber** é uma API REST completa para gerenciamento de barbearias, desenv
 | 📊 **Dashboard** | Métricas e relatórios gerenciais |
 | 🔔 **Notificações** | Sistema completo de alertas |
 | 📧 **Email** | Envio de promoções e avisos |
-
-> 📚 **Documentação completa:** Consulte o [README2.md](README2.md) para informações detalhadas sobre entidades, endpoints e arquitetura.
 
 ---
 
