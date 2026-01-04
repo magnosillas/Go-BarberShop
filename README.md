@@ -14,6 +14,17 @@
 </div>
 
 ---
+## 👥 Equipe
+
+Projeto desenvolvido pelos alunos da equipe **GoBarber**, do curso de Bacharelado em Ciência da Computação da  **UFAPE – Universidade Federal do Agreste de Pernambuco**.
+
+### Integrantes
+- Adenilson Ferreira Ramos  
+- Magno Sillas Nunes Ramos Gomes  
+- Nicoly Lana Lourenço Carvalho  
+- Ricaelle Nascimento Teixeira Pontes
+
+---
 
 ## 📋 Sobre o Projeto
 
@@ -857,12 +868,6 @@ kill -9 <PID>
 - ✅ Autenticação JWT
 - ✅ Documentação Swagger
 - ✅ Dockerização do projeto
-
----
-
-## �👥 Equipe
-
-Desenvolvido pela equipe **GoBarber** - UFAPE (Universidade Federal do Agreste de Pernambuco)
 
 ---
 
