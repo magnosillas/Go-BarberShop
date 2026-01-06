@@ -834,7 +834,7 @@ kill -9 <PID>
 
 ## 🔗 Links Úteis
 
-- 📚 [Documentação Técnica Completa](README2.md)
+- 📚 [Documentação Técnica Completa](docs/Relatório%20Programação%20Web.pdf)
 - 📖 [Swagger API Docs](http://localhost:8080/swagger-ui.html)
 - 🐛 [Reportar Bug](https://github.com/Go-BarberShop/Go-Barber/issues)
 
