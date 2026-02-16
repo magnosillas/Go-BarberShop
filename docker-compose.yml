@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # ==========================================
@@ -31,7 +31,7 @@ services:
   # ==========================================
   api:
     build:
-      context: .
+      context: ./back
       dockerfile: Dockerfile
     container_name: gobarber-api
     restart: unless-stopped
@@ -43,23 +43,43 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gobarber
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-gobarber}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-gobarber123}
-      
+
       # JPA/Hibernate
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: gobarber
-      
+
       # Email Configuration (opcional)
       SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      
+
       # JWT Configuration
       JWT_SECRET: ${JWT_SECRET:-gobarber-secret-key-change-in-production}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
-      
+
       # Java Options
       JAVA_OPTS: "-Xms256m -Xmx512m"
     ports:
       - "${API_PORT:-8080}:8080"
+    networks:
+      - gobarber-network
+
+  # ==========================================
+  # 🌐 GoBarber Frontend (Next.js)
+  # ==========================================
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8080}
+    container_name: gobarber-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:8080
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
     networks:
       - gobarber-network
 
@@ -75,7 +95,7 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@gobarber.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_SERVER_MODE: "False"
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     depends_on:
