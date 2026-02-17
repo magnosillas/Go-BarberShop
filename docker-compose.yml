@@ -13,11 +13,10 @@ services:
       POSTGRES_USER: ${DB_USER:-gobarber}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-gobarber123}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql:ro
-      - ./docker/seed-data.sql:/seed-data.sql:ro
     networks:
       - gobarber-network
     healthcheck:
@@ -110,8 +109,6 @@ services:
 # ==========================================
 volumes:
   postgres_data:
-    driver: local
-  pgadmin_data:
     driver: local
 
 # ==========================================
