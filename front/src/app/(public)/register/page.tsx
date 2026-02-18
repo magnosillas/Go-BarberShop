@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { genericaApiAuth } from "@/api/api";
+import { genericaPublic } from "@/api/api";
+import { AuthTokenService } from "@/lib/services/authToken";
 import { toast } from "react-toastify";
 
 export default function RegisterPage() {
@@ -11,7 +12,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    login: "",
+    phone: "",
     password: "",
     confirmPassword: "",
   });
@@ -24,7 +25,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.name || !form.email || !form.login || !form.password) {
+    if (!form.name || !form.email || !form.phone || !form.password) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -34,30 +35,50 @@ export default function RegisterPage() {
       return;
     }
 
-    if (form.password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+    if (form.password.length < 3) {
+      toast.error("A senha deve ter pelo menos 3 caracteres");
       return;
     }
 
     setLoading(true);
     try {
-      const response = await genericaApiAuth({
+      const response = await genericaPublic({
         metodo: "POST",
-        uri: "/register",
+        uri: "/public/register",
         data: {
           name: form.name,
           email: form.email,
-          login: form.login,
+          phone: form.phone,
           password: form.password,
         },
       });
 
       if (response && response.status < 400) {
-        toast.success("Conta criada com sucesso! Faça login.");
-        router.push("/login");
+        const data = response.data;
+        const rawToken = (data.token || "").replace(/^Bearer\s+/i, "");
+        if (rawToken) {
+          const [, payload] = rawToken.split(".");
+          const decoded = JSON.parse(atob(payload));
+          const currentTime = Math.floor(Date.now() / 1000);
+          const expiresIn = decoded.exp - currentTime;
+
+          AuthTokenService.setToken(rawToken, expiresIn);
+          AuthTokenService.setUser({
+            id: decoded.sub || decoded.id || "",
+            nome: data.name || form.name,
+            email: form.email,
+            roles: [data.role || "CLIENT"],
+          });
+
+          toast.success("Conta criada com sucesso! Bem-vindo(a)!");
+          router.push("/login");
+        } else {
+          toast.success("Conta criada! Faça login para continuar.");
+          router.push("/login");
+        }
       } else {
         const msg =
-          response?.data?.message || response?.data || "Erro ao criar conta";
+          response?.data?.error || response?.data?.message || "Erro ao criar conta";
         toast.error(typeof msg === "string" ? msg : "Erro ao criar conta");
       }
     } catch (err: any) {
@@ -101,18 +122,20 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 placeholder="seu@email.com"
                 className="gobarber-input"
+                required
               />
             </div>
 
             <div>
-              <label className="gobarber-label">Login (usuário)</label>
+              <label className="gobarber-label">Telefone</label>
               <input
-                type="text"
-                name="login"
-                value={form.login}
+                type="tel"
+                name="phone"
+                value={form.phone}
                 onChange={handleChange}
-                placeholder="seu_usuario"
+                placeholder="(81) 99999-9999"
                 className="gobarber-input"
+                required
               />
             </div>
 
