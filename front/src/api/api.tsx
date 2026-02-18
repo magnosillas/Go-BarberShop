@@ -14,7 +14,7 @@ const resolveBaseUrl = () =>
 const BASE_URL = resolveBaseUrl();
 const AUTH_URL = `${BASE_URL}/auth`;
 
-const buildHeaders = () => {
+const buildHeaders = (data?: unknown) => {
   if (!isBrowser()) return null;
   let accessToken: string | null = null;
   try {
@@ -23,10 +23,14 @@ const buildHeaders = () => {
     accessToken = null;
   }
   if (!accessToken) return null;
-  return {
-    "Content-Type": "application/json",
+  // Quando data é FormData (multipart), não definir Content-Type — axios define automaticamente com boundary
+  const headers: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
   };
+  if (!(data instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+  return headers;
 };
 
 /**
@@ -39,7 +43,7 @@ export const generica = async ({
   data = {},
   responseType = "json",
 }: GenericaOptions) => {
-  const headers = buildHeaders();
+  const headers = buildHeaders(data);
   if (!headers) {
     if (isBrowser()) AuthTokenService.redirectToLogin();
     return undefined;
@@ -55,7 +59,7 @@ export const generica = async ({
       responseType,
     });
   } catch (error: any) {
-    if (error?.response?.status === 401 || error?.response?.status === 403) {
+    if (error?.response?.status === 401) {
       if (isBrowser()) AuthTokenService.redirectToLogin();
     }
     return error?.response;
