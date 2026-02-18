@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="6.0-create-cancellation-rule" author="gobarber">
+        <createTable tableName="cancellation_rule" schemaName="gobarber">
+            <column name="id_cancellation_rule" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="cancel_deadline_hours" type="INT" defaultValueNumeric="24">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cancellation_fee_percentage" type="DOUBLE" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="no_show_fee_percentage" type="DOUBLE" defaultValueNumeric="100">
+                <constraints nullable="false"/>
+            </column>
+            <column name="max_cancellations_per_month" type="INT" defaultValueNumeric="3">
+                <constraints nullable="false"/>
+            </column>
+            <column name="allow_reschedule" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reschedule_deadline_hours" type="INT" defaultValueNumeric="12">
+                <constraints nullable="false"/>
+            </column>
+            <column name="penalty_after_max_cancellations" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="block_days_after_max_cancellations" type="INT" defaultValueNumeric="7">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="6.0-seed-default-cancellation-rule" author="gobarber" context="dev">
+        <insert tableName="cancellation_rule" schemaName="gobarber">
+            <column name="cancel_deadline_hours" valueNumeric="24"/>
+            <column name="cancellation_fee_percentage" valueNumeric="0"/>
+            <column name="no_show_fee_percentage" valueNumeric="100"/>
+            <column name="max_cancellations_per_month" valueNumeric="3"/>
+            <column name="allow_reschedule" valueBoolean="true"/>
+            <column name="reschedule_deadline_hours" valueNumeric="12"/>
+            <column name="penalty_after_max_cancellations" valueBoolean="true"/>
+            <column name="block_days_after_max_cancellations" valueNumeric="7"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

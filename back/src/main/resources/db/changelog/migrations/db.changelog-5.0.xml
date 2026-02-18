@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Adicionar coluna status ao appointment -->
+    <changeSet id="5.0.1" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="appointment" columnName="status" schemaName="gobarber"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="appointment" schemaName="gobarber">
+            <column name="status" type="VARCHAR(30)" defaultValue="CONFIRMED">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- Adicionar coluna rejection_reason ao appointment -->
+    <changeSet id="5.0.2" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="appointment" columnName="rejection_reason" schemaName="gobarber"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="appointment" schemaName="gobarber">
+            <column name="rejection_reason" type="VARCHAR(500)"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- Garantir que a coluna client_id existe (já deve existir do changelog 2.0) -->
+    <changeSet id="5.0.3" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="appointment" columnName="client_id" schemaName="gobarber"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="appointment" schemaName="gobarber">
+            <column name="client_id" type="BIGINT">
+                <constraints nullable="true"
+                             foreignKeyName="fk_appointment_client"
+                             references="gobarber.client(id_client)"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- Adicionar findByUser ao client (coluna id_user linkada a employee) -->
+    <changeSet id="5.0.4" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_appointment_status" schemaName="gobarber"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="idx_appointment_status" tableName="appointment" schemaName="gobarber">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="5.0.5" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_appointment_client_id" schemaName="gobarber"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="idx_appointment_client_id" tableName="appointment" schemaName="gobarber">
+            <column name="client_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

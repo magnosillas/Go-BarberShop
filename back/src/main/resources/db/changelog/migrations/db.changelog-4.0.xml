@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <!-- ==========================================
+         Fix: Adicionar colunas faltantes para alinhar
+         entidades JPA com o schema do banco de dados
+         ========================================== -->
+
+    <!-- Barber: adicionar coluna 'active' -->
+    <changeSet id="4.0-barber-add-active" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="barber" columnName="active"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="barber">
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- Client: adicionar coluna 'first_visit' -->
+    <changeSet id="4.0-client-add-first-visit" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="client" columnName="first_visit"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="client">
+            <column name="first_visit" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- Client: adicionar coluna 'id_user' (FK para employee) -->
+    <changeSet id="4.0-client-add-id-user" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="client" columnName="id_user"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="client">
+            <column name="id_user" type="INTEGER"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="client" baseColumnNames="id_user"
+                                 constraintName="fk_client_user"
+                                 referencedTableName="employee" referencedColumnNames="id_user"/>
+    </changeSet>
+
+    <!-- AuditLog: adicionar colunas faltantes -->
+    <changeSet id="4.0-audit-log-add-columns" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="audit_log" columnName="user_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="audit_log">
+            <column name="user_id" type="BIGINT"/>
+            <column name="user_email" type="VARCHAR(255)"/>
+            <column name="description" type="TEXT"/>
+            <column name="response_status" type="INTEGER"/>
+            <column name="execution_time_ms" type="BIGINT"/>
+            <column name="success" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="error_message" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- AuditLog: tornar username nullable (para permitir logs sem username) -->
+    <changeSet id="4.0-audit-log-username-nullable" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="audit_log" columnName="username"/>
+        </preConditions>
+        <dropNotNullConstraint tableName="audit_log" columnName="username" columnDataType="VARCHAR(255)"/>
+    </changeSet>
+
+    <!-- Payment: adicionar colunas faltantes -->
+    <changeSet id="4.0-payment-add-columns" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="payment" columnName="client_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="payment">
+            <column name="client_id" type="BIGINT"/>
+            <column name="external_reference" type="VARCHAR(255)"/>
+            <column name="coupon_code" type="VARCHAR(50)"/>
+            <column name="coupon_discount" type="DECIMAL(10,2)" defaultValueNumeric="0.00"/>
+            <column name="loyalty_discount" type="DECIMAL(10,2)" defaultValueNumeric="0.00"/>
+            <column name="pix_qr_code" type="TEXT"/>
+            <column name="card_last_digits" type="VARCHAR(4)"/>
+            <column name="card_brand" type="VARCHAR(50)"/>
+            <column name="barber_id" type="INTEGER"/>
+            <column name="due_date" type="TIMESTAMP"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="payment" baseColumnNames="client_id"
+                                 constraintName="fk_payment_client"
+                                 referencedTableName="client" referencedColumnNames="id_client"/>
+        <addForeignKeyConstraint baseTableName="payment" baseColumnNames="barber_id"
+                                 constraintName="fk_payment_barber"
+                                 referencedTableName="barber" referencedColumnNames="id_barber"/>
+    </changeSet>
+
+</databaseChangeLog>

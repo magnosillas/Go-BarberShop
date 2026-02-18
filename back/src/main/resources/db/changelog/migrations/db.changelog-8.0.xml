@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Tabela de junção barbeiro-barbearia (N:N) para suporte multi-tenant -->
+    <changeSet id="8.0-create-barber-barbershop" author="gobarber">
+        <createTable tableName="barber_barbershop" schemaName="gobarber">
+            <column name="id_barbershop" type="INT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_bb_barbershop"
+                             references="gobarber.barbershop(id_barbershop)"/>
+            </column>
+            <column name="id_barber" type="INT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_bb_barber"
+                             references="gobarber.barber(id_barber)"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="barber_barbershop"
+                       schemaName="gobarber"
+                       columnNames="id_barbershop, id_barber"
+                       constraintName="pk_barber_barbershop"/>
+    </changeSet>
+
+</databaseChangeLog>

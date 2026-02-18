@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Tabela de barbearias -->
+    <changeSet id="7.0-create-barbershop" author="gobarber">
+        <createTable tableName="barbershop" schemaName="gobarber">
+            <column name="id_barbershop" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slug" type="VARCHAR(200)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="cnpj" type="VARCHAR(20)">
+                <constraints unique="true"/>
+            </column>
+            <column name="phone" type="VARCHAR(20)"/>
+            <column name="email" type="VARCHAR(100)"/>
+            <column name="logo_url" type="VARCHAR(500)"/>
+            <column name="banner_url" type="VARCHAR(500)"/>
+            <column name="id_address" type="INT">
+                <constraints foreignKeyName="fk_barbershop_address"
+                             references="gobarber.address(id_adress)"/>
+            </column>
+            <column name="opening_hours" type="VARCHAR(200)"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Tabela de junção cliente-barbearia (N:N) -->
+    <changeSet id="7.0-create-client-barbershop" author="gobarber">
+        <createTable tableName="client_barbershop" schemaName="gobarber">
+            <column name="id_barbershop" type="INT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_cb_barbershop"
+                             references="gobarber.barbershop(id_barbershop)"/>
+            </column>
+            <column name="id_client" type="INT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_cb_client"
+                             references="gobarber.client(id_client)"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="client_barbershop"
+                       schemaName="gobarber"
+                       columnNames="id_barbershop, id_client"
+                       constraintName="pk_client_barbershop"/>
+    </changeSet>
+
+    <!-- Seed: barbearia padrão em dev -->
+    <changeSet id="7.0-seed-default-barbershop" author="gobarber" context="dev">
+        <!-- Endereço da barbearia -->
+        <insert tableName="address" schemaName="gobarber">
+            <column name="street" value="Rua do Corte"/>
+            <column name="number" valueNumeric="100"/>
+            <column name="neighborhood" value="Centro"/>
+            <column name="city" value="Recife"/>
+            <column name="state" value="PE"/>
+            <column name="cep" value="50000000"/>
+        </insert>
+
+        <insert tableName="barbershop" schemaName="gobarber">
+            <column name="name" value="GoBarber Principal"/>
+            <column name="slug" value="gobarber-principal"/>
+            <column name="description" value="Barbearia principal do GoBarber. Cortes modernos e atendimento de primeira."/>
+            <column name="phone" value="(81) 99999-0000"/>
+            <column name="email" value="contato@gobarber.com"/>
+            <column name="opening_hours" value="Seg-Sex 9h-20h, Sáb 9h-18h"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+    <!-- Adicionar ROLE_CLIENT se não existir -->
+    <changeSet id="7.0-add-role-client" author="gobarber">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM gobarber.role WHERE name_role = 'ROLE_CLIENT'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            INSERT INTO gobarber.role (name_role) VALUES ('ROLE_CLIENT');
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
