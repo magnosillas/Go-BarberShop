@@ -12,6 +12,7 @@ interface UseRolesReturn {
   isAdmin: boolean;
   isBarber: boolean;
   isSecretary: boolean;
+  isClient: boolean;
   canAccess: (requiredRoles?: RoleKey[], requireAll?: boolean) => boolean;
 }
 
@@ -58,6 +59,8 @@ export function useRoles(): UseRolesReturn {
     [hasAnyRole],
   );
 
+  const isClient = useMemo(() => hasRole("CLIENT"), [hasRole]);
+
   return {
     roles,
     hasRole,
@@ -66,6 +69,7 @@ export function useRoles(): UseRolesReturn {
     isAdmin,
     isBarber,
     isSecretary,
+    isClient,
     canAccess,
   };
 }

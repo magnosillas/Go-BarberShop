@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthContext } from "@/contexts/AuthContext";
+import { useRoles } from "@/hooks/useRoles";
+import type { RoleKey } from "@/types/menu";
 import {
   FaCalendarAlt,
   FaCut,
@@ -21,21 +23,42 @@ import {
   FaTimes,
   FaUserTie,
   FaHome,
+  FaClipboardList,
+  FaUserShield,
+  FaCalendarCheck,
+  FaStore,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 
-const menuItems = [
-  { path: "/dashboard", label: "Dashboard", icon: <FaHome /> },
-  { path: "/agendamentos", label: "Agendamentos", icon: <FaCalendarAlt /> },
-  { path: "/barbeiros", label: "Barbeiros", icon: <FaCut /> },
-  { path: "/clientes", label: "Clientes", icon: <FaUsers /> },
-  { path: "/servicos", label: "Serviços", icon: <FaUserTie /> },
-  { path: "/produtos", label: "Produtos & Estoque", icon: <FaBoxes /> },
-  { path: "/avaliacoes", label: "Avaliações", icon: <FaStar /> },
-  { path: "/pagamentos", label: "Pagamentos", icon: <FaCreditCard /> },
-  { path: "/promocoes", label: "Promoções & Cupons", icon: <FaTags /> },
-  { path: "/lista-espera", label: "Lista de Espera", icon: <FaClock /> },
-  { path: "/notificacoes", label: "Notificações", icon: <FaBell /> },
-  { path: "/relatorios", label: "Relatórios", icon: <FaChartBar /> },
+interface MenuEntry {
+  path: string;
+  label: string;
+  icon: React.ReactNode;
+  roles: RoleKey[];
+}
+
+const allMenuItems: MenuEntry[] = [
+  // Admin / Secretária / Barbeiro — painel de gestão
+  { path: "/dashboard",        label: "Dashboard",          icon: <FaHome />,           roles: ["ADMIN", "SECRETARY", "BARBER"] },
+  { path: "/agendamentos",     label: "Agendamentos",       icon: <FaCalendarAlt />,    roles: ["ADMIN", "SECRETARY", "BARBER"] },
+  { path: "/agenda-barbeiro",  label: "Agenda Barbeiro",    icon: <FaCalendarCheck />,  roles: ["ADMIN", "BARBER"] },
+  { path: "/barbeiros",        label: "Barbeiros",          icon: <FaCut />,            roles: ["ADMIN", "SECRETARY"] },
+  { path: "/secretarias",      label: "Secretárias",        icon: <FaUserShield />,     roles: ["ADMIN"] },
+  { path: "/clientes",         label: "Clientes",           icon: <FaUsers />,          roles: ["ADMIN", "SECRETARY"] },
+  { path: "/servicos",         label: "Serviços",           icon: <FaUserTie />,        roles: ["ADMIN"] },
+  { path: "/produtos",         label: "Produtos & Estoque", icon: <FaBoxes />,          roles: ["ADMIN"] },
+  { path: "/avaliacoes",       label: "Avaliações",         icon: <FaStar />,           roles: ["ADMIN", "BARBER"] },
+  { path: "/pagamentos",       label: "Pagamentos",         icon: <FaCreditCard />,     roles: ["ADMIN", "SECRETARY"] },
+  { path: "/promocoes",        label: "Promoções & Cupons", icon: <FaTags />,           roles: ["ADMIN"] },
+  { path: "/lista-espera",     label: "Lista de Espera",    icon: <FaClock />,          roles: ["ADMIN", "SECRETARY"] },
+  { path: "/notificacoes",     label: "Notificações",       icon: <FaBell />,           roles: ["ADMIN", "SECRETARY", "BARBER", "CLIENT"] },
+  { path: "/relatorios",       label: "Relatórios",         icon: <FaChartBar />,       roles: ["ADMIN"] },
+  { path: "/barbearias",       label: "Barbearias",         icon: <FaStore />,          roles: ["ADMIN"] },
+  { path: "/enderecos",         label: "Endereços",          icon: <FaMapMarkerAlt />,   roles: ["ADMIN", "SECRETARY"] },
+  // Cliente — visão simplificada
+  { path: "/meus-agendamentos", label: "Meus Agendamentos", icon: <FaClipboardList />,  roles: ["CLIENT"] },
+  { path: "/loja",              label: "Loja",               icon: <FaStore />,          roles: ["CLIENT"] },
+  { path: "/configuracoes",     label: "Configurações",      icon: <FaCog />,            roles: ["ADMIN", "SECRETARY", "BARBER", "CLIENT"] },
 ];
 
 interface GoBarberLayoutProps {
@@ -45,7 +68,19 @@ interface GoBarberLayoutProps {
 export default function GoBarberLayout({ children }: GoBarberLayoutProps) {
   const pathname = usePathname();
   const auth = useContext(AuthContext);
+  const { roles, canAccess, isClient } = useRoles();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Filtra itens do menu de acordo com as roles do usuário
+  const menuItems = useMemo(() => {
+    return allMenuItems.filter((item) => {
+      // ADMIN vê tudo (exceto itens exclusivos de CLIENT)
+      if (roles.includes("ADMIN")) {
+        return !item.roles.every((r) => r === "CLIENT");
+      }
+      return item.roles.some((r) => roles.includes(r));
+    });
+  }, [roles]);
 
   const handleLogout = async () => {
     await auth?.logout();
@@ -73,7 +108,7 @@ export default function GoBarberLayout({ children }: GoBarberLayoutProps) {
                      ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-white/10">
+        <div className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 border-b border-white/10">
           <Link href="/dashboard" className="flex items-center gap-3">
             <span className="text-2xl">💈</span>
             <span className="text-xl font-bold">GoBarber</span>
@@ -123,7 +158,14 @@ export default function GoBarberLayout({ children }: GoBarberLayoutProps) {
                 {auth?.user?.nome || "Usuário"}
               </p>
               <p className="text-xs text-white/50 truncate">
-                {auth?.user?.roles?.[0] || ""}
+                {(() => {
+                  const r = auth?.user?.roles?.[0];
+                  if (r === "ADMIN") return "Administrador";
+                  if (r === "BARBER") return "Barbeiro";
+                  if (r === "SECRETARY") return "Secretária";
+                  if (r === "CLIENT") return "Cliente";
+                  return r || "";
+                })()}
               </p>
             </div>
           </div>
@@ -141,36 +183,38 @@ export default function GoBarberLayout({ children }: GoBarberLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top Bar */}
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 sticky top-0 z-30">
-          <div className="flex items-center gap-4">
+        <header className="h-14 sm:h-16 bg-white shadow-sm flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-gray-600 hover:text-gray-900"
+              className="lg:hidden text-gray-600 hover:text-gray-900 shrink-0"
             >
               <FaBars className="text-xl" />
             </button>
-            <h2 className="text-lg font-semibold text-[#1A1A2E]">
+            <h2 className="text-base sm:text-lg font-semibold text-[#1A1A2E] truncate">
               {currentTitle}
             </h2>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             <Link
               href="/notificacoes"
               className="relative p-2 text-gray-500 hover:text-[#1A1A2E] rounded-lg hover:bg-gray-100 transition-colors"
             >
               <FaBell className="text-lg" />
             </Link>
-            <Link
-              href="/configuracoes"
-              className="p-2 text-gray-500 hover:text-[#1A1A2E] rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <FaCog className="text-lg" />
-            </Link>
+            {!isClient && (
+              <Link
+                href="/configuracoes"
+                className="p-2 text-gray-500 hover:text-[#1A1A2E] rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <FaCog className="text-lg" />
+              </Link>
+            )}
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 animate-fade-in">{children}</main>
+        <main className="flex-1 p-3 sm:p-4 md:p-6 animate-fade-in">{children}</main>
       </div>
     </div>
   );

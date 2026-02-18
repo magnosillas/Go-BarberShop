@@ -2,7 +2,7 @@ import type { SvgIconComponent } from "@mui/icons-material";
 
 export type ModuleKey = "gobarber";
 
-export type RoleKey = "ADMIN" | "BARBER" | "SECRETARY";
+export type RoleKey = "ADMIN" | "BARBER" | "SECRETARY" | "CLIENT";
 
 export interface MenuItem {
   id: string;
