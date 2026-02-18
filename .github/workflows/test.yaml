@@ -19,16 +19,22 @@ jobs:
       - name: Configurar JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Cache do Maven
         uses: actions/cache@v3
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('back/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
       - name: Construir e rodar testes
+        working-directory: back
+        env:
+          SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb
+          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+          JWT_SECRET: test-secret-key
+          CORS_ORIGINS: http://localhost:3000
         run: mvn clean verify
