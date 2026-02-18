@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,7 @@ public class PaymentController implements PaymentControllerDoc {
 
     @Override
     @PostMapping
-    public ResponseEntity<PaymentDTO> create(@Valid @RequestBody PaymentCreateDTO dto) throws DataBaseException {
+    public ResponseEntity<PaymentDTO> create(@RequestBody PaymentCreateDTO dto) throws DataBaseException {
         PaymentDTO created = paymentService.createPayment(dto);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }

@@ -110,7 +110,7 @@ public class ClientController implements ClientControllerDoc {
     @Override
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ClientDTO> create(
-            @Valid @RequestPart("client") ClientCreateDTO dto,
+            @RequestPart("client") ClientCreateDTO dto,
             @RequestPart(value = "photo", required = false) MultipartFile photo) throws DataBaseException {
         ClientDTO created = clientService.create(dto, photo);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
@@ -127,7 +127,7 @@ public class ClientController implements ClientControllerDoc {
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ClientDTO> update(
             @PathVariable Long id,
-            @Valid @RequestPart("client") ClientCreateDTO dto,
+            @RequestPart("client") ClientCreateDTO dto,
             @RequestPart(value = "photo", required = false) MultipartFile photo)
             throws NotFoundException, DataBaseException {
         ClientDTO updated = clientService.update(id, dto, photo);

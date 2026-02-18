@@ -28,16 +28,13 @@ public class AppointmentServiceTest {
         LocalDateTime startTime = LocalDateTime.of(2024, 12, 20, 10, 0);
         LocalDateTime endTime = LocalDateTime.of(2024, 12, 20, 11, 0);
 
-        Appointment appointment = new Appointment(
-                1,
-                "João Silva",
-                "11-98765-4321",
-                null, // barber
-                null, // serviceType
-                startTime,
-                endTime,
-                50.0
-        );
+        Appointment appointment = new Appointment();
+        appointment.setId(1);
+        appointment.setClientName("João Silva");
+        appointment.setClientNumber("11-98765-4321");
+        appointment.setStartTime(startTime);
+        appointment.setEndTime(endTime);
+        appointment.setTotalPrice(50.0);
 
         assertEquals(1, appointment.getId());
         assertEquals("João Silva", appointment.getClientName());

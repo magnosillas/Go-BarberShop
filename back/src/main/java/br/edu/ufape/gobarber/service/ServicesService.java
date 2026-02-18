@@ -83,7 +83,7 @@ public class ServicesService {
         );
     }
 
-    protected Services getServiceEntity(Integer id) throws DataBaseException {
+    public Services getServiceEntity(Integer id) throws DataBaseException {
         return servicesRepository.findById(id)
                 .orElseThrow(() -> new DataBaseException("Serviço não encontrado!"));
     }

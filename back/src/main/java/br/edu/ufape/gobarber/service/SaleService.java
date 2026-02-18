@@ -6,7 +6,9 @@ import br.edu.ufape.gobarber.dto.sale.SaleDTO;
 import br.edu.ufape.gobarber.dto.sale.SaleEmailDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseConstraintException;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
+import br.edu.ufape.gobarber.model.Client;
 import br.edu.ufape.gobarber.model.Sale;
+import br.edu.ufape.gobarber.repository.ClientRepository;
 import br.edu.ufape.gobarber.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,7 @@ import javax.validation.ConstraintViolationException;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,8 @@ public class SaleService {
 
     private final SaleRepository saleRepository;
     private final EmailService emailService;
+    private final ClientRepository clientRepository;
+    private final NotificationService notificationService;
     private static final SecureRandom RANDOM = new SecureRandom();
 
     @Transactional
@@ -206,24 +211,19 @@ public class SaleService {
 
         SaleEmailDTO saleEmailDTO = new SaleEmailDTO(sale.getName(), sale.getTotalPrice(), sale.getCoupon(), sale.getEndDate());
 
-        //List<String> costumersEmails = costumerRepository.findAllEmails();
-        List<String> costumersEmails = List.of(
-                "cadu29bahia@gmail.com"
-               , "adenilson.ramos@ufape.edu.br"
-               , "Mestreguga24@gmail.com"
-               , "carlosrichard7@gmail.com"
-               , "emanuelreino13@gmail.com"
-               , "erikff7@gmail.com"
-               , "ricaelle.nascimento@ufape.edu.br"
-               , "LucasGaldencio77@gmail.com"
-               , "rodrigo.andrade@ufape.edu.br"
-
-        );
+        // Busca emails dos clientes que aceitam promoções
+        List<String> costumersEmails = clientRepository.findByReceivePromotionsTrue()
+                .stream()
+                .map(Client::getEmail)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
         for(String email : costumersEmails) {
             emailService.sendPromotionalEmail(email, saleEmailDTO);
         }
 
+        // Cria notificações no sistema para os clientes
+        notificationService.createPromotionNotifications(sale);
     }
 
 }

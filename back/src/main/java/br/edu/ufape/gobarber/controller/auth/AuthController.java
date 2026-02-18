@@ -21,7 +21,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +36,7 @@ public class AuthController implements AuthControllerDoc {
     
     @Override
     @PostMapping
-    public ResponseEntity<Map<String, String>> auth(@RequestBody @Valid LoginDTO loginDTO) {
+    public ResponseEntity<Map<String, String>> auth(@RequestBody LoginDTO loginDTO) {
         try {
             log.info("Tentativa de login para: {}", loginDTO.getLogin());
             
@@ -83,7 +82,7 @@ public class AuthController implements AuthControllerDoc {
 
     @Override
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Valid UserCreateDTO userCreateDTO) {
+    public ResponseEntity<?> register(@RequestBody UserCreateDTO userCreateDTO) {
         try {
             log.info("Tentativa de registro para: {}", userCreateDTO.getLogin());
             UserDTO user = userService.create(userCreateDTO);

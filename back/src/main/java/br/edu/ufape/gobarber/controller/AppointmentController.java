@@ -2,6 +2,8 @@ package br.edu.ufape.gobarber.controller;
 
 import br.edu.ufape.gobarber.dto.appointment.AppointmentCreateDTO;
 import br.edu.ufape.gobarber.dto.appointment.AppointmentDTO;
+import br.edu.ufape.gobarber.dto.appointment.AppointmentRejectDTO;
+import br.edu.ufape.gobarber.dto.appointment.AppointmentRequestDTO;
 import br.edu.ufape.gobarber.dto.page.PageAppointmentDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
 
@@ -14,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/appointments")
@@ -124,5 +127,62 @@ public class AppointmentController {
     public ResponseEntity<Void> deleteAppointment(@PathVariable Integer id) {
         appointmentService.deleteAppointment(id);
         return ResponseEntity.ok().build();
+    }
+
+    // ==================== Workflow de Aprovação ====================
+
+    // Aprovar agendamento pendente
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<AppointmentDTO> approveAppointment(@PathVariable Integer id) throws DataBaseException {
+        AppointmentDTO appointmentDTO = appointmentService.approveAppointment(id);
+        return ResponseEntity.ok(appointmentDTO);
+    }
+
+    // Rejeitar agendamento pendente
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<AppointmentDTO> rejectAppointment(
+            @PathVariable Integer id,
+            @RequestBody @Valid AppointmentRejectDTO rejectDTO) throws DataBaseException {
+        AppointmentDTO appointmentDTO = appointmentService.rejectAppointment(id, rejectDTO.getReason());
+        return ResponseEntity.ok(appointmentDTO);
+    }
+
+    // Listar agendamentos pendentes de aprovação
+    @GetMapping("/pending")
+    public ResponseEntity<PageAppointmentDTO> getPendingAppointments(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
+        PageAppointmentDTO appointments = appointmentService.getPendingAppointments(page, size);
+        return ResponseEntity.ok(appointments);
+    }
+
+    // ==================== Endpoints do Cliente ====================
+
+    // Cliente solicita agendamento
+    @PostMapping("/request")
+    public ResponseEntity<AppointmentDTO> requestAppointment(
+            @RequestBody @Valid AppointmentRequestDTO requestDTO,
+            HttpServletRequest request) throws DataBaseException {
+        AppointmentDTO appointmentDTO = appointmentService.requestAppointment(requestDTO, request);
+        return new ResponseEntity<>(appointmentDTO, HttpStatus.CREATED);
+    }
+
+    // Cliente lista seus agendamentos
+    @GetMapping("/my")
+    public ResponseEntity<PageAppointmentDTO> getMyAppointments(
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            HttpServletRequest request) throws DataBaseException {
+        PageAppointmentDTO appointments = appointmentService.getMyAppointments(page, size, request);
+        return ResponseEntity.ok(appointments);
+    }
+
+    // Cliente cancela seu agendamento
+    @PostMapping("/my/{id}/cancel")
+    public ResponseEntity<AppointmentDTO> cancelMyAppointment(
+            @PathVariable Integer id,
+            HttpServletRequest request) throws DataBaseException {
+        AppointmentDTO appointmentDTO = appointmentService.cancelMyAppointment(id, request);
+        return ResponseEntity.ok(appointmentDTO);
     }
 }

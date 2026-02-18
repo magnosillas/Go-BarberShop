@@ -13,8 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
-
 @RestController
 @RequestMapping("/sale")
 @Validated
@@ -35,7 +33,7 @@ public class SaleController implements SaleControllerDoc {
     }
 
     @PostMapping
-    public ResponseEntity<SaleDTO> createSale(@Valid @RequestBody SaleCreateDTO saleCreateDTO)
+    public ResponseEntity<SaleDTO> createSale(@RequestBody SaleCreateDTO saleCreateDTO)
             throws DataBaseException, DataBaseConstraintException {
 
         SaleDTO saleDTO = saleService.createSale(saleCreateDTO);
@@ -43,7 +41,7 @@ public class SaleController implements SaleControllerDoc {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SaleDTO> updateSale(@Valid @RequestBody SaleCreateDTO saleCreateDTO, @PathVariable Integer id)
+    public ResponseEntity<SaleDTO> updateSale(@RequestBody SaleCreateDTO saleCreateDTO, @PathVariable Integer id)
             throws DataBaseException {
 
         SaleDTO saleDTO = saleService.updateSale(id, saleCreateDTO);

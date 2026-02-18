@@ -37,6 +37,7 @@ public class AuditService {
             AuditLog auditLog = AuditLog.builder()
                     .userId(userId)
                     .userEmail(userEmail)
+                    .username(userEmail)
                     .action(action)
                     .entityType(entityType)
                     .entityId(entityId)

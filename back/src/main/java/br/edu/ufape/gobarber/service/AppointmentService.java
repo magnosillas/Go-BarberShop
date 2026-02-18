@@ -2,14 +2,18 @@ package br.edu.ufape.gobarber.service;
 
 import br.edu.ufape.gobarber.dto.appointment.AppointmentCreateDTO;
 import br.edu.ufape.gobarber.dto.appointment.AppointmentDTO;
+import br.edu.ufape.gobarber.dto.appointment.AppointmentRequestDTO;
+import br.edu.ufape.gobarber.dto.appointment.AvailabilityDTO;
 import br.edu.ufape.gobarber.dto.page.PageAppointmentDTO;
 import br.edu.ufape.gobarber.exceptions.AppointmentException;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
 import br.edu.ufape.gobarber.model.Appointment;
 import br.edu.ufape.gobarber.model.Barber;
+import br.edu.ufape.gobarber.model.Client;
 import br.edu.ufape.gobarber.model.Services;
 import br.edu.ufape.gobarber.model.login.User;
 import br.edu.ufape.gobarber.repository.AppointmentRepository;
+import br.edu.ufape.gobarber.repository.ClientRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,9 +22,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -30,6 +37,8 @@ public class AppointmentService {
     private final BarberService barberService;
     private final ServicesService servicesService;
     private final UserService userService;
+    private final ClientRepository clientRepository;
+    private final NotificationService notificationService;
 
     public PageAppointmentDTO getHistoryFromToken(Integer page, Integer size, HttpServletRequest request) throws DataBaseException {
         String token = request.getHeader("Authorization");
@@ -291,6 +300,14 @@ public class AppointmentService {
         appointmentDTO.setServiceType(appointment.getServiceType());
         appointmentDTO.setTotalPrice(appointment.getTotalPrice());
 
+        if (appointment.getStatus() != null) {
+            appointmentDTO.setStatus(appointment.getStatus().name());
+        }
+        appointmentDTO.setRejectionReason(appointment.getRejectionReason());
+        if (appointment.getClient() != null) {
+            appointmentDTO.setClientId(appointment.getClient().getIdClient());
+        }
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         String timeString;
 
@@ -305,5 +322,275 @@ public class AppointmentService {
         }
 
         return appointmentDTO;
+    }
+
+    // ==================== Workflow de Aprovação ====================
+
+    /**
+     * Cliente solicita um agendamento (status = PENDING_APPROVAL)
+     */
+    @Transactional
+    public AppointmentDTO requestAppointment(AppointmentRequestDTO requestDTO, HttpServletRequest request) 
+            throws AppointmentException, DataBaseException {
+        
+        // Identificar o cliente logado
+        String token = request.getHeader("Authorization");
+        Integer userId = userService.getJtiFromToken(token);
+        Optional<User> user = userService.findById(userId);
+        
+        if (user.isEmpty()) {
+            throw new DataBaseException("Usuário não encontrado");
+        }
+        
+        Client client = clientRepository.findByUser(user.get())
+                .orElseThrow(() -> new DataBaseException("Perfil de cliente não encontrado para este usuário"));
+        
+        // Criar o agendamento com PENDING_APPROVAL
+        Appointment appointment = new Appointment();
+        appointment.setClientName(client.getName());
+        appointment.setClientNumber(client.getPhone());
+        appointment.setBarber(barberService.getBarberEntity(requestDTO.getBarberId()));
+        appointment.setClient(client);
+        appointment.setStatus(Appointment.AppointmentStatus.PENDING_APPROVAL);
+        
+        Set<Services> services = new HashSet<>();
+        Integer timeMinutes = 0;
+        Double price = 0.0;
+        for (Integer id : requestDTO.getServiceTypeIds()) {
+            Services s = servicesService.getServiceEntity(id);
+            services.add(s);
+            timeMinutes += (s.getTime().getHour() * 60 + s.getTime().getMinute());
+            price += s.getValue();
+        }
+        
+        appointment.setTotalPrice(price);
+        appointment.setServiceType(services);
+        appointment.setStartTime(requestDTO.getStartTime());
+        appointment.setEndTime(requestDTO.getStartTime().plusMinutes(timeMinutes));
+        
+        // Validação básica (não valida conflito pois está pendente)
+        if (appointment.getBarber() == null) {
+            throw new AppointmentException("É necessário selecionar um barbeiro para o agendamento");
+        }
+        
+        Set<Services> servicesBarber = appointment.getBarber().getServices();
+        for (Services s : services) {
+            if (!servicesBarber.contains(s)) {
+                throw new AppointmentException("O barbeiro selecionado não está apto para algum desses serviços");
+            }
+        }
+        
+        if (appointment.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new AppointmentException("Não é possível agendar para um dia/horário passado");
+        }
+        
+        return convertEntityToDTO(appointmentRepository.save(appointment));
+    }
+
+    /**
+     * Salva um agendamento criado pelo fluxo público (sem autenticação).
+     * A entidade já vem montada pelo controller.
+     */
+    @Transactional
+    public AppointmentDTO savePublicAppointment(Appointment appointment) {
+        return convertEntityToDTO(appointmentRepository.save(appointment));
+    }
+
+    /**
+     * Admin/Secretária aprova um agendamento pendente
+     */
+    @Transactional
+    public AppointmentDTO approveAppointment(Integer id) throws DataBaseException, AppointmentException {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new DataBaseException("Agendamento não encontrado"));
+        
+        if (appointment.getStatus() != Appointment.AppointmentStatus.PENDING_APPROVAL) {
+            throw new AppointmentException("Apenas agendamentos pendentes podem ser aprovados");
+        }
+        
+        // Validar conflito de horário antes de aprovar
+        isTimeValidated(appointment);
+        
+        appointment.setStatus(Appointment.AppointmentStatus.CONFIRMED);
+        Appointment saved = appointmentRepository.save(appointment);
+        
+        // Enviar notificação de confirmação
+        if (appointment.getClient() != null) {
+            notificationService.createAppointmentConfirmation(saved, appointment.getClient());
+            // Agendar lembrete
+            notificationService.createAppointmentReminder(saved, appointment.getClient());
+        }
+        
+        return convertEntityToDTO(saved);
+    }
+
+    /**
+     * Admin/Secretária rejeita um agendamento pendente
+     */
+    @Transactional
+    public AppointmentDTO rejectAppointment(Integer id, String reason) throws DataBaseException, AppointmentException {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new DataBaseException("Agendamento não encontrado"));
+        
+        if (appointment.getStatus() != Appointment.AppointmentStatus.PENDING_APPROVAL) {
+            throw new AppointmentException("Apenas agendamentos pendentes podem ser rejeitados");
+        }
+        
+        appointment.setStatus(Appointment.AppointmentStatus.REJECTED);
+        appointment.setRejectionReason(reason);
+        Appointment saved = appointmentRepository.save(appointment);
+        
+        // Enviar notificação de cancelamento/rejeição
+        if (appointment.getClient() != null) {
+            notificationService.createAppointmentCancellation(saved, appointment.getClient());
+        }
+        
+        return convertEntityToDTO(saved);
+    }
+
+    /**
+     * Listar agendamentos pendentes de aprovação
+     */
+    public PageAppointmentDTO getPendingAppointments(Integer page, Integer size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Appointment> pageApp = appointmentRepository.findByStatusOrderByStartTimeAsc(
+                Appointment.AppointmentStatus.PENDING_APPROVAL, pageable);
+        Page<AppointmentDTO> appointmentDTOS = pageApp.map(this::convertEntityToDTO);
+
+        return new PageAppointmentDTO(
+                appointmentDTOS.getTotalElements(),
+                appointmentDTOS.getTotalPages(),
+                appointmentDTOS.getPageable().getPageNumber(),
+                appointmentDTOS.getSize(),
+                appointmentDTOS.getContent()
+        );
+    }
+
+    /**
+     * Listar agendamentos do cliente logado
+     */
+    public PageAppointmentDTO getMyAppointments(Integer page, Integer size, HttpServletRequest request) 
+            throws DataBaseException {
+        String token = request.getHeader("Authorization");
+        Integer userId = userService.getJtiFromToken(token);
+        Optional<User> user = userService.findById(userId);
+        
+        if (user.isEmpty()) {
+            throw new DataBaseException("Usuário não encontrado");
+        }
+        
+        Client client = clientRepository.findByUser(user.get())
+                .orElseThrow(() -> new DataBaseException("Perfil de cliente não encontrado"));
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Appointment> pageApp = appointmentRepository.findByClientOrderByStartTimeDesc(client, pageable);
+        Page<AppointmentDTO> appointmentDTOS = pageApp.map(this::convertEntityToDTO);
+
+        return new PageAppointmentDTO(
+                appointmentDTOS.getTotalElements(),
+                appointmentDTOS.getTotalPages(),
+                appointmentDTOS.getPageable().getPageNumber(),
+                appointmentDTOS.getSize(),
+                appointmentDTOS.getContent()
+        );
+    }
+
+    /**
+     * Cancelar agendamento do próprio cliente
+     */
+    @Transactional
+    public AppointmentDTO cancelMyAppointment(Integer id, HttpServletRequest request) 
+            throws DataBaseException, AppointmentException {
+        String token = request.getHeader("Authorization");
+        Integer userId = userService.getJtiFromToken(token);
+        Optional<User> user = userService.findById(userId);
+        
+        if (user.isEmpty()) {
+            throw new DataBaseException("Usuário não encontrado");
+        }
+        
+        Client client = clientRepository.findByUser(user.get())
+                .orElseThrow(() -> new DataBaseException("Perfil de cliente não encontrado"));
+        
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new DataBaseException("Agendamento não encontrado"));
+        
+        if (appointment.getClient() == null || !appointment.getClient().getIdClient().equals(client.getIdClient())) {
+            throw new AppointmentException("Você só pode cancelar seus próprios agendamentos");
+        }
+        
+        if (appointment.getStatus() != Appointment.AppointmentStatus.PENDING_APPROVAL &&
+            appointment.getStatus() != Appointment.AppointmentStatus.CONFIRMED) {
+            throw new AppointmentException("Este agendamento não pode ser cancelado");
+        }
+        
+        appointment.setStatus(Appointment.AppointmentStatus.CANCELLED);
+        return convertEntityToDTO(appointmentRepository.save(appointment));
+    }
+
+    // ==================== Disponibilidade ====================
+
+    /**
+     * Calcula horários disponíveis de um barbeiro em uma data
+     */
+    public AvailabilityDTO getBarberAvailability(Integer barberId, LocalDate date) throws DataBaseException {
+        Barber barber = barberService.getBarberEntity(barberId);
+        
+        LocalDateTime dayStart = date.atStartOfDay();
+        LocalDateTime dayEnd = date.atTime(23, 59, 59);
+        
+        // Buscar agendamentos existentes (confirmados ou pendentes)
+        List<Appointment> existingAppointments = appointmentRepository
+                .findActiveAppointmentsByBarberAndDate(barber, dayStart, dayEnd);
+        
+        // Calcular slots disponíveis baseado no horário de trabalho do barbeiro
+        LocalTime workStart = barber.getStart();
+        LocalTime workEnd = barber.getEnd();
+        
+        if (workStart == null || workEnd == null) {
+            workStart = LocalTime.of(8, 0);
+            workEnd = LocalTime.of(18, 0);
+        }
+        
+        List<AvailabilityDTO.TimeSlot> availableSlots = new ArrayList<>();
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+        
+        // Gerar slots de 30 minutos
+        LocalTime currentSlot = workStart;
+        while (currentSlot.plusMinutes(30).compareTo(workEnd) <= 0) {
+            LocalDateTime slotStart = date.atTime(currentSlot);
+            LocalDateTime slotEnd = slotStart.plusMinutes(30);
+            
+            // Verificar se o slot está livre
+            boolean isOccupied = false;
+            for (Appointment existing : existingAppointments) {
+                if (slotStart.isBefore(existing.getEndTime()) && slotEnd.isAfter(existing.getStartTime())) {
+                    isOccupied = true;
+                    break;
+                }
+            }
+            
+            // Slot do passado não é disponível
+            if (slotStart.isBefore(LocalDateTime.now())) {
+                isOccupied = true;
+            }
+            
+            if (!isOccupied) {
+                availableSlots.add(new AvailabilityDTO.TimeSlot(
+                        currentSlot.format(timeFormatter),
+                        currentSlot.plusMinutes(30).format(timeFormatter)
+                ));
+            }
+            
+            currentSlot = currentSlot.plusMinutes(30);
+        }
+        
+        AvailabilityDTO dto = new AvailabilityDTO();
+        dto.setBarberId(barber.getIdBarber());
+        dto.setBarberName(barber.getName());
+        dto.setDate(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        dto.setAvailableSlots(availableSlots);
+        
+        return dto;
     }
 }
