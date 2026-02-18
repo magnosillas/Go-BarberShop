@@ -108,7 +108,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const data = response.data;
       // O backend retorna: { token, role }
       // Precisamos decodificar o JWT para pegar info do user
-      const jwtToken = data.token;
+      // O backend pode retornar "Bearer <jwt>" — removemos o prefixo
+      const jwtToken = (data.token || "").replace(/^Bearer\s+/i, "");
       const role = data.role;
 
       // Decodificar payload do JWT
@@ -118,8 +119,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const expiresIn = decoded.exp - currentTime;
 
       const userData: User = {
-        id: decoded.sub || decoded.id || "",
-        nome: decoded.nome || decoded.name || decoded.sub || "",
+        id: decoded.jti || decoded.sub || decoded.id || "",
+        nome: decoded.nome || decoded.name || decoded.sub || credentials.email || "",
         email: decoded.email || credentials.email || "",
         roles: [role as RoleKey],
       };
