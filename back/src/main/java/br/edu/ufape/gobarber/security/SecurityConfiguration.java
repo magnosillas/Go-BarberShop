@@ -1,6 +1,7 @@
 package br.edu.ufape.gobarber.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,6 +22,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
     private final TokenService tokenService;
+
+    @Value("${cors.origins:http://localhost:3000}")
+    private String[] corsOrigins;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -57,14 +61,14 @@ public class SecurityConfiguration {
                         // Dashboard - admin e secretárias podem ver
                         .antMatchers("/dashboard/**").hasAnyRole("ADMIN", "SECRETARY")
                         // Notification - todos autenticados podem ver suas notificações
-                        .antMatchers(HttpMethod.GET, "/notification/client/**").hasAnyRole("ADMIN", "SECRETARY", "BARBER")
+                        .antMatchers(HttpMethod.GET, "/notification/client/**")
+                        .hasAnyRole("ADMIN", "SECRETARY", "BARBER")
                         .antMatchers("/notification/**").hasAnyRole("ADMIN", "SECRETARY")
-                        .anyRequest().denyAll()
-                );
+                        .anyRequest().denyAll());
 
         http.addFilterBefore(new TokenAuthenticationFilter(tokenService), UsernamePasswordAuthenticationFilter.class);
         return http.build();
-        
+
     }
 
     @Bean
@@ -81,6 +85,7 @@ public class SecurityConfiguration {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
+                        .allowedOrigins(corsOrigins)
                         .allowedMethods("*")
                         .exposedHeaders("Authorization");
             }
@@ -93,7 +98,8 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 }

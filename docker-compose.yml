@@ -13,7 +13,7 @@ services:
       POSTGRES_USER: ${DB_USER:-gobarber}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-gobarber123}
     ports:
-      - "${DB_PORT:-5433}:5432"
+      - "${DB_PORT:-5432}:5432" # Porta externa configurável
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql:ro
@@ -43,22 +43,28 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-gobarber}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-gobarber123}
 
+      # Controle de Perfil (Dev ou Prod)
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+
+      # CORS Dinâmico (Permite que o front acesse a API)
+      CORS_ORIGINS: ${CORS_ORIGINS}
+
       # JPA/Hibernate
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: gobarber
 
-      # Email Configuration (opcional)
+      # Email Configuration
       SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-}
 
       # JWT Configuration
-      JWT_SECRET: ${JWT_SECRET:-gobarber-secret-key-change-in-production}
+      JWT_SECRET: ${JWT_SECRET:-change-me}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
 
       # Java Options
       JAVA_OPTS: "-Xms256m -Xmx512m"
     ports:
-      - "${API_PORT:-8080}:8080"
+      - "${API_PORT:-8080}:8080" # Porta externa configurável
     networks:
       - gobarber-network
 
@@ -70,27 +76,29 @@ services:
       context: ./front
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8080}
+        # ISSO É CRUCIAL: Passa a URL para o build do Next.js
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: gobarber-frontend
     restart: unless-stopped
     depends_on:
       - api
     environment:
-      NEXT_PUBLIC_API_URL: http://api:8080
+      # Disponível apenas no lado do servidor (SSR)
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "${FRONTEND_PORT:-3000}:3000" # Porta externa configurável
     networks:
       - gobarber-network
 
   # ==========================================
-  # 🔧 pgAdmin (Opcional - Interface Gráfica)
+  # 🔧 pgAdmin (Interface Gráfica)
   # ==========================================
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: gobarber-pgadmin
     restart: unless-stopped
     profiles:
-      - tools
+      - tools # Só sobe se usar --profile tools (opcional) ou remova essa linha para subir sempre
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@gobarber.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
@@ -109,6 +117,8 @@ services:
 # ==========================================
 volumes:
   postgres_data:
+    driver: local
+  pgadmin_data: # Adicionado pois estava faltando
     driver: local
 
 # ==========================================
