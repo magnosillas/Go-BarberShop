@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @Tag(name = "Clientes", description = "API para gerenciamento de clientes e programa de fidelidade")
@@ -29,7 +30,7 @@ public interface ClientControllerDoc {
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "409", description = "Email ou CPF já cadastrado")
     })
-    ResponseEntity<ClientDTO> create(ClientCreateDTO dto, MultipartFile photo) throws DataBaseException;
+    ResponseEntity<ClientDTO> create(@Valid ClientCreateDTO dto, MultipartFile photo) throws DataBaseException;
 
     @Operation(summary = "Atualizar cliente", description = "Atualiza dados de um cliente existente")
     @ApiResponses(value = {
@@ -39,7 +40,7 @@ public interface ClientControllerDoc {
     })
     ResponseEntity<ClientDTO> update(
             @Parameter(description = "ID do cliente") Long id,
-            ClientCreateDTO dto, MultipartFile photo) throws NotFoundException, DataBaseException;
+            @Valid ClientCreateDTO dto, MultipartFile photo) throws NotFoundException, DataBaseException;
 
     @Operation(summary = "Excluir cliente", description = "Remove um cliente do sistema")
     @ApiResponses(value = {

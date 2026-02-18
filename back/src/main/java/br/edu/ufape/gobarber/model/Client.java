@@ -29,16 +29,16 @@ public class Client {
     @Column(name = "id_client")
     private Long idClient;
 
-    @Column(name = "name_client", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "email_client", unique = true)
+    @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "phone_client", nullable = false)
+    @Column(name = "phone")
     private String phone;
 
-    @Column(name = "cpf_client", unique = true)
+    @Column(name = "cpf", unique = true)
     private String cpf;
 
     @Column(name = "birth_date")
@@ -49,10 +49,10 @@ public class Client {
     private Gender gender;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "id_address", referencedColumnName = "id_adress")
+    @JoinColumn(name = "address_id", referencedColumnName = "id_adress")
     private Address address;
 
-    @Column(name = "profile_photo")
+    @Column(name = "photo")
     private byte[] profilePhoto;
 
     @Column(name = "notes")
@@ -88,14 +88,14 @@ public class Client {
     @Column(name = "total_spent", columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
     private Double totalSpent = 0.0;
 
-    @Column(name = "last_visit")
+    @Column(name = "last_visit_date")
     private LocalDateTime lastVisit;
 
     @Column(name = "first_visit")
     private LocalDateTime firstVisit;
 
     // Controle
-    @Column(name = "active", columnDefinition = "BOOLEAN DEFAULT TRUE")
+    @Column(name = "is_active", columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean active = true;
 
     @Column(name = "created_at", updatable = false)

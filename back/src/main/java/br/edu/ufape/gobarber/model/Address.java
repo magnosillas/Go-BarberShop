@@ -26,7 +26,7 @@ public class Address {
     @Column(name = "number")
     private Integer number;
 
-    @JoinColumn(name = "neighborhood")
+    @Column(name = "neighborhood")
     private String neighborhood;
 
     @Column(name = "city")

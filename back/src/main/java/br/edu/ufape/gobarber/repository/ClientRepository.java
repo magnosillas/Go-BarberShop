@@ -1,6 +1,7 @@
 package br.edu.ufape.gobarber.repository;
 
 import br.edu.ufape.gobarber.model.Client;
+import br.edu.ufape.gobarber.model.login.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,6 +21,8 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     Optional<Client> findByPhone(String phone);
 
     Optional<Client> findByCpf(String cpf);
+
+    Optional<Client> findByUser(User user);
 
     Page<Client> findByActiveTrue(Pageable pageable);
 

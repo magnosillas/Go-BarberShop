@@ -25,21 +25,27 @@ public class Payment {
     private Long idPayment;
 
     @ManyToOne
-    @JoinColumn(name = "id_appointment")
+    @JoinColumn(name = "appointment_id")
     private Appointment appointment;
 
     @ManyToOne
-    @JoinColumn(name = "id_client")
+    @JoinColumn(name = "client_id")
     private Client client;
 
     @Column(name = "amount", nullable = false)
     private Double amount;
 
-    @Column(name = "discount_amount", columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
+    @Column(name = "discount", columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
     private Double discountAmount = 0.0;
+
+    @Column(name = "discount_reason")
+    private String discountReason;
 
     @Column(name = "final_amount", nullable = false)
     private Double finalAmount;
+
+    @Column(name = "tip", columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
+    private Double tip = 0.0;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false)
@@ -91,7 +97,7 @@ public class Payment {
 
     // Comissão
     @ManyToOne
-    @JoinColumn(name = "id_barber")
+    @JoinColumn(name = "barber_id")
     private Barber barber;
 
     @Column(name = "commission_rate", columnDefinition = "DECIMAL(5,2) DEFAULT 0.00")
@@ -99,6 +105,16 @@ public class Payment {
 
     @Column(name = "commission_amount", columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
     private Double commissionAmount = 0.0;
+
+    // Reembolso
+    @Column(name = "refund_amount")
+    private Double refundAmount;
+
+    @Column(name = "refund_reason")
+    private String refundReason;
+
+    @Column(name = "refund_date")
+    private LocalDateTime refundDate;
 
     // Datas
     @Column(name = "payment_date")

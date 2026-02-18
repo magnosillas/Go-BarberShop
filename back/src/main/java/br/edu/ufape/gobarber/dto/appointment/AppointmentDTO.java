@@ -30,4 +30,10 @@ public class AppointmentDTO {
     private String endTime;
 
     private Double totalPrice;
+
+    private String status;
+
+    private String rejectionReason;
+
+    private Long clientId;
 }

@@ -20,7 +20,7 @@ public class AuditLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_audit_log")
+    @Column(name = "id_audit")
     private Long idAuditLog;
 
     @Column(name = "user_id")
@@ -29,8 +29,11 @@ public class AuditLog {
     @Column(name = "user_email")
     private String userEmail;
 
+    @Column(name = "username")
+    private String username;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "action", nullable = false)
+    @Column(name = "action_type", nullable = false)
     private AuditAction action;
 
     @Column(name = "entity_type", nullable = false)
@@ -54,10 +57,10 @@ public class AuditLog {
     @Column(name = "user_agent")
     private String userAgent;
 
-    @Column(name = "request_uri")
+    @Column(name = "request_url")
     private String requestUri;
 
-    @Column(name = "request_method")
+    @Column(name = "http_method")
     private String requestMethod;
 
     @Column(name = "response_status")

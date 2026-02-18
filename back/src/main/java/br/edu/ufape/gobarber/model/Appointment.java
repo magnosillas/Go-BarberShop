@@ -16,17 +16,15 @@ import java.util.Set;
 @Entity
 @Table(name = "appointment")
 public class Appointment {
-        public LocalDateTime getStartTime() {
-            return this.startTime;
-        }
 
-        public Barber getBarber() {
-            return this.barber;
-        }
+    public enum AppointmentStatus {
+        PENDING_APPROVAL,
+        CONFIRMED,
+        REJECTED,
+        CANCELLED,
+        COMPLETED
+    }
 
-        public Double getTotalPrice() {
-            return this.totalPrice;
-        }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_appointment")
@@ -45,7 +43,7 @@ public class Appointment {
     @ManyToMany
     @JoinTable(
             name = "appointment_service",
-            joinColumns = @JoinColumn(name = "id_appointment "),
+            joinColumns = @JoinColumn(name = "id_appointment"),
             inverseJoinColumns = @JoinColumn(name = "id_service")
     )
     private Set<Services> serviceType;
@@ -59,4 +57,14 @@ public class Appointment {
     @Column(name = "total_price")
     private Double totalPrice;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private AppointmentStatus status = AppointmentStatus.CONFIRMED;
+
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
+
+    @ManyToOne
+    @JoinColumn(name = "client_id")
+    private Client client;
 }

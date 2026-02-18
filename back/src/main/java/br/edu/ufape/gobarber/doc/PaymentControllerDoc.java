@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,7 @@ public interface PaymentControllerDoc {
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "404", description = "Agendamento não encontrado")
     })
-    ResponseEntity<PaymentDTO> create(PaymentCreateDTO dto) throws DataBaseException;
+    ResponseEntity<PaymentDTO> create(@Valid PaymentCreateDTO dto) throws DataBaseException;
 
     @Operation(summary = "Buscar pagamento", description = "Retorna os dados de um pagamento específico")
     @ApiResponses(value = {

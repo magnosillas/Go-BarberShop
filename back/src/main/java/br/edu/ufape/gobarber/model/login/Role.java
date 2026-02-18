@@ -23,12 +23,7 @@ public class Role implements GrantedAuthority {
     private String name;
 
     @JsonIgnore
-    @ManyToMany
-    @JoinTable(
-            name = "EMPLOYEE_X_ROLE",
-            joinColumns = @JoinColumn(name = "ID_ROLE"),
-            inverseJoinColumns = @JoinColumn(name = "ID_USER")
-    )
+    @OneToMany(mappedBy = "role")
     private Set<User> users;
 
     @Override
