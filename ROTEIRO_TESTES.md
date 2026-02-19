@@ -1,4 +1,4 @@
-# Roteiro de Testes — GoBarber
+﻿# Roteiro de Testes — GoBarber
 
 > **Data:** 21/02/2026  
 > **Ambiente:** Docker Compose (gobarber-db, gobarber-api:8082, gobarber-frontend:3000)  
@@ -85,6 +85,15 @@
 | A-06 | Dashboard semanal | 1. Selecionar período "Semana" | Mostra dados da semana corrente. | ☐ |
 | A-07 | Dashboard mensal | 1. Selecionar período "Mês" | Mostra dados do mês corrente. | ☐ |
 | A-08 | Dashboard anual | 1. Selecionar período "Ano" | Mostra dados anuais com gráficos de tendência. | ☐ |
+| A-98 | Relatório financeiro | 1. Endpoint `GET /dashboard/financial` | Retorna resumo financeiro: receita, despesas, lucro. | ☐ |
+| A-99 | Estatísticas de clientes | 1. Endpoint `GET /dashboard/clients` | Retorna métricas de clientes: novos, retidos, perdidos. | ☐ |
+| A-100 | Estatísticas de barbeiros | 1. Endpoint `GET /dashboard/barbers` 2. `GET /dashboard/barbers-status` | Retorna dados de barbeiros e status atual (disponível/ocupado). | ☐ |
+| A-101 | Relatório de serviços | 1. Endpoint `GET /dashboard/services-report` | Retorna serviços mais populares e receita por serviço. | ☐ |
+| A-102 | Agendamentos de hoje | 1. Endpoint `GET /dashboard/appointments-today` | Retorna lista de agendamentos do dia atual. | ☐ |
+| A-103 | Receita em tempo real | 1. Endpoint `GET /dashboard/revenue-realtime` | Retorna receita acumulada do dia em tempo real. | ☐ |
+| A-104 | Tendências (receita, agendamentos, clientes) | 1. `GET /dashboard/trend/revenue` 2. `GET /dashboard/trend/appointments` 3. `GET /dashboard/trend/clients` | Retorna dados de tendência para gráficos de linha. | ☐ |
+| A-105 | KPIs gerais e por barbeiro | 1. `GET /dashboard/kpis` 2. `GET /dashboard/barber/{barberId}/kpis` | Retorna indicadores-chave de desempenho geral e por barbeiro. | ☐ |
+| A-106 | Comparação geral de períodos | 1. Endpoint `GET /dashboard/compare` | Retorna comparação de métricas entre dois períodos. | ☐ |
 
 ### 2.3 Barbeiros (`/barbeiros`)
 
@@ -97,6 +106,7 @@
 | A-13 | Adicionar serviço ao barbeiro | 1. Editar barbeiro 2. Adicionar serviço "Luzes" à lista de serviços 3. Salvar | Serviço adicionado ao barbeiro. | ☐ |
 | A-14 | Remover serviço do barbeiro | 1. Editar barbeiro 2. Remover serviço "Sobrancelha" 3. Salvar | Serviço removido. Barbeiro não oferece mais esse serviço. | ☐ |
 | A-15 | Excluir barbeiro | 1. Clicar em excluir barbeiro 2. Confirmar exclusão | Barbeiro removido da lista. | ☐ |
+| A-107 | Ver foto de perfil do barbeiro | 1. Endpoint `GET /barber/{id}/profile-photo` | Retorna a imagem de perfil do barbeiro ou 404 se não tem. | ☐ |
 
 ### 2.4 Secretárias (`/secretarias`)
 
@@ -106,6 +116,7 @@
 | A-17 | Cadastrar secretária | 1. Clicar em "Nova Secretária" 2. Preencher nome, email, telefone, CPF, salário (ex: 3500.00), carga horária (ex: 44) 3. Salvar | Secretária criada. Salário e carga horária salvos como número. | ☐ |
 | A-18 | Editar secretária | 1. Selecionar secretária "Ana Costa" 2. Alterar salário para 3800.00 3. Salvar | Dados atualizados com sucesso. Valor numérico correto. | ☐ |
 | A-19 | Excluir secretária | 1. Clicar em excluir 2. Confirmar | Secretária removida. | ☐ |
+| A-108 | Ver secretária por ID e perfil logado | 1. `GET /secretary/{id}` (admin) 2. `GET /secretary/logged-secretary` (secretária logada) 3. `GET /secretary/{id}/profile-photo` | Retorna dados, perfil logado e foto da secretária. | ☐ |
 
 ### 2.5 Clientes (`/clientes`)
 
@@ -124,8 +135,26 @@
 | A-30 | Ver clientes top spenders | 1. Endpoint `/client/top-spenders` | Lista clientes ordenados por gasto total. | ☐ |
 | A-31 | Ver aniversariantes do mês | 1. Endpoint `/client/birthdays/month` | Lista clientes que fazem aniversário no mês corrente. | ☐ |
 | A-32 | Ver clientes inativos | 1. Endpoint `/client/inactive-clients` | Lista clientes sem visita recente. | ☐ |
+| A-109 | Buscar cliente por CPF | 1. Endpoint `GET /client/cpf/{cpf}` | Retorna dados do cliente correspondente ao CPF. | ☐ |
+| A-110 | Gerenciar foto do cliente | 1. `PUT /client/{id}/photo` (upload) 2. `GET /client/{id}/photo` (visualizar) 3. `DELETE /client/{id}/photo` (remover) | Foto enviada, exibida e removida com sucesso. | ☐ |
+| A-111 | Resgatar pontos de fidelidade | 1. Selecionar cliente com pontos 2. `POST /client/{id}/loyalty/redeem` com quantidade | Pontos resgatados. Saldo reduzido. | ☐ |
+| A-112 | Ver clientes top e VIP | 1. `GET /client/top-clients` 2. `GET /client/vip` | Lista clientes mais frequentes e clientes VIP. | ☐ |
+| A-113 | Ver aniversários (çoes) de hoje | 1. Endpoint `GET /client/birthdays/today` | Lista clientes que fazem aniversário hoje. | ☐ |
+| A-114 | Ver clientes por tier de fidelidade | 1. Endpoint `GET /client/by-loyalty-tier/GOLD` | Lista clientes do tier GOLD (BRONZE, SILVER, GOLD, PLATINUM, DIAMOND). | ☐ |
+| A-115 | Ver desconto de fidelidade | 1. Endpoint `GET /client/{id}/loyalty-discount` | Retorna percentual de desconto baseado no tier do cliente. | ☐ |
+| A-116 | Ver clientes para promoções | 1. Endpoint `GET /client/clients-for-promotions` | Lista clientes elegíveis para promoções. | ☐ |
+| A-117 | Dashboard de clientes (contagens) | 1. `GET /client/total-clients` 2. `GET /client/active-clients` 3. `GET /client/loyalty-distribution` | Retorna total, ativos e distribuição por tier de fidelidade. | ☐ |
 
-### 2.6 Serviços (`/servicos`)
+### 2.6 Endereços (`/enderecos`)
+
+| # | Caso de Teste | Passos | Resultado Esperado | Status |
+|---|--------------|--------|-------------------|--------|
+| A-118 | Listar endereços | 1. Acessar `/enderecos` | Lista endereços cadastrados no sistema. | ☐ |
+| A-119 | Criar endereço | 1. Clicar em "Novo Endereço" 2. Preencher rua, número, bairro, cidade, estado, CEP 3. Salvar | Endereço criado com sucesso. | ☐ |
+| A-120 | Editar endereço | 1. Selecionar endereço 2. Alterar campos 3. Salvar | Dados atualizados. | ☐ |
+| A-121 | Excluir endereço | 1. Clicar em excluir 2. Confirmar | Endereço removido. | ☐ |
+
+### 2.7 Serviços (`/servicos`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -134,7 +163,7 @@
 | A-35 | Editar serviço | 1. Editar "Corte Masculino" 2. Alterar preço para R$ 40 3. Salvar | Preço atualizado. | ☐ |
 | A-36 | Excluir serviço | 1. Excluir serviço sem barbeiros vinculados 2. Confirmar | Serviço removido. | ☐ |
 
-### 2.7 Produtos e Estoque (`/produtos`)
+### 2.8 Produtos e Estoque (`/produtos`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -143,8 +172,11 @@
 | A-39 | Adicionar estoque | 1. Selecionar produto 2. Adicionar quantidade ao estoque | Quantidade atualizada. | ☐ |
 | A-40 | Editar produto | 1. Editar produto 2. Alterar preço 3. Salvar | Dados atualizados. | ☐ |
 | A-41 | Excluir produto | 1. Excluir produto 2. Confirmar | Produto removido. | ☐ |
+| A-122 | Editar movimentação de estoque | 1. `PUT /stock/{id}` com nova quantidade | Movimentação atualizada. | ☐ |
+| A-123 | Excluir movimentação de estoque | 1. `DELETE /stock/{id}` | Movimentação removida. | ☐ |
+| A-124 | Consultar estoque por produto | 1. `GET /stock/product/{productId}` | Retorna histór. de movimentações do produto. | ☐ |
 
-### 2.8 Promoções / Cupons (`/promocoes`)
+### 2.9 Promoções / Cupons (`/promocoes`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -153,8 +185,11 @@
 | A-44 | Enviar notificação de promoção | 1. Selecionar promoção 2. Enviar por email | Notificação enviada aos clientes elegíveis. | ☐ |
 | A-45 | Editar promoção | 1. Editar promoção existente 2. Alterar desconto 3. Salvar | Desconto atualizado. | ☐ |
 | A-46 | Excluir promoção | 1. Excluir promoção 2. Confirmar | Promoção removida. | ☐ |
+| A-125 | Ver promoção por ID | 1. Endpoint `GET /sale/{id}` | Retorna dados completos da promoção. | ☐ |
+| A-126 | Ver promoções válidas | 1. Endpoint `GET /sale/valid` | Lista promoções dentro do prazo de validade. | ☐ |
+| A-127 | Buscar por código de cupom | 1. Endpoint `GET /sale/coupon/{coupon}` | Retorna promoção correspondente ao código ou 404. | ☐ |
 
-### 2.9 Agendamentos (`/agendamentos`)
+### 2.10 Agendamentos (`/agendamentos`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -166,8 +201,11 @@
 | A-52 | Cancelar/excluir agendamento | 1. Excluir agendamento 2. Confirmar | Agendamento removido ou marcado como cancelado. | ☐ |
 | A-53 | Ver agendamentos futuros | 1. Filtrar por agendamentos futuros | Lista apenas agendamentos com data futura. | ☐ |
 | A-54 | Ver agendamentos por barbeiro | 1. Filtrar por barbeiro específico | Mostra apenas agendamentos do barbeiro selecionado. | ☐ |
+| A-128 | Ver agendamento por ID | 1. Endpoint `GET /appointments/{id}` | Retorna dados completos de um agendamento específico. | ☐ |
+| A-129 | Histórico por barbeiro específico | 1. Endpoint `GET /appointments/history/barber` | Retorna histórico de agendamentos de um barbeiro. | ☐ |
+| A-130 | Agendamentos futuros por barbeiro | 1. Endpoint `GET /appointments/future/barber` | Retorna agendamentos futuros de um barbeiro específico. | ☐ |
 
-### 2.10 Pagamentos (`/pagamentos`)
+### 2.11 Pagamentos (`/pagamentos`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -180,8 +218,21 @@
 | A-61 | Receita total | 1. Endpoint `/payment/revenue/total` | Retorna valor total de receita. | ☐ |
 | A-62 | Receita do dia | 1. Endpoint `/payment/revenue/today` | Retorna receita do dia. | ☐ |
 | A-63 | Receita por barbeiro | 1. Endpoint `/payment/barber/{id}/revenue` | Retorna receita do barbeiro específico. | ☐ |
+| A-131 | Ver pagamento por ID | 1. Endpoint `GET /payment/{id}` | Retorna dados completos de um pagamento específico. | ☐ |
+| A-132 | Código PIX | 1. Criar pagamento com método PIX 2. `GET /payment/{id}/pix-code` | Retorna código PIX copia-e-cola. | ☐ |
+| A-133 | QR Code PIX | 1. `GET /payment/{id}/pix-qrcode` | Retorna imagem do QR Code para pagamento PIX. | ☐ |
+| A-134 | Filtrar por status | 1. Endpoint `GET /payment/status/CONFIRMED` | Lista pagamentos com status CONFIRMED. | ☐ |
+| A-135 | Filtrar por método de pagamento | 1. Endpoint `GET /payment/method/PIX` | Lista pagamentos feitos via PIX. | ☐ |
+| A-136 | Filtrar por período | 1. Endpoint `GET /payment/period?start=...&end=...` | Lista pagamentos dentro do período informado. | ☐ |
+| A-137 | Pagamentos por agendamento | 1. Endpoint `GET /payment/appointment/{appointmentId}` | Lista pagamentos vinculados ao agendamento. | ☐ |
+| A-138 | Pagamentos por cliente | 1. Endpoint `GET /payment/client/{clientId}` | Lista pagamentos de um cliente específico. | ☐ |
+| A-139 | Pagamentos por barbeiro | 1. Endpoint `GET /payment/barber/{barberId}` | Lista pagamentos associados ao barbeiro. | ☐ |
+| A-140 | Receita mensal e diária | 1. `GET /payment/revenue/month` 2. `GET /payment/revenue/daily` | Retorna receita do mês corrente e evolução diária. | ☐ |
+| A-141 | Comissão por barbeiro | 1. Endpoint `GET /payment/barber/{barberId}/commission` | Retorna valor de comissão do barbeiro. | ☐ |
+| A-142 | Ticket médio e receita por método | 1. `GET /payment/average-ticket` 2. `GET /payment/revenue/by-method` | Retorna ticket médio e breakdown de receita por forma de pagamento. | ☐ |
+| A-143 | Pagamentos pendentes | 1. `GET /payment/pending` 2. `GET /payment/pending/count` 3. `GET /payment/count` | Lista pagamentos pendentes, contagem de pendentes e total. | ☐ |
 
-### 2.11 Avaliações (`/avaliacoes`)
+### 2.12 Avaliações (`/avaliacoes`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -190,8 +241,12 @@
 | A-66 | Ocultar avaliação | 1. Selecionar avaliação inadequada 2. Ocultar | Avaliação não aparece mais publicamente. | ☐ |
 | A-67 | Reexibir avaliação | 1. Selecionar avaliação oculta 2. Reexibir | Avaliação volta a ser visível. | ☐ |
 | A-68 | Ver ranking de barbeiros | 1. Endpoint `/review/ranking/barbers` | Lista barbeiros ordenados por nota média. | ☐ |
+| A-144 | Ver avaliação por ID | 1. Endpoint `GET /review/{id}` | Retorna dados completos de uma avaliação específica. | ☐ |
+| A-145 | Detalhes de avaliações por barbeiro | 1. `GET /review/barber/{id}` (lista) 2. `GET /review/barber/{id}/top` (melhores) 3. `GET /review/barber/{id}/count` (total) 4. `GET /review/barber/{id}/distribution` (distribuição) | Retorna lista, top, contagem e distribuição de notas do barbeiro. | ☐ |
+| A-146 | Estatísticas gerais de avaliações | 1. `GET /review/stats/average` 2. `GET /review/stats/recommendation-rate` | Retorna média geral e taxa de recomendação. | ☐ |
+| A-147 | Avaliações pendentes de resposta | 1. Endpoint `GET /review/pending-reply` | Lista avaliações que ainda não receberam resposta. | ☐ |
 
-### 2.12 Notificações (`/notificacoes`)
+### 2.13 Notificações (`/notificacoes`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -199,8 +254,12 @@
 | A-70 | Enviar notificação de teste | 1. Endpoint `POST /notification/send-test` | Notificação de teste enviada com sucesso. | ☐ |
 | A-71 | Reenviar notificação falhada | 1. Encontrar notificação FAILED 2. Reenviar | Nova tentativa de envio. | ☐ |
 | A-72 | Excluir notificação | 1. Excluir notificação 2. Confirmar | Notificação removida. | ☐ |
+| A-148 | Notificações do cliente (histórico) | 1. `GET /notification/client/{clientId}` 2. `GET /notification/client/{clientId}/unread` 3. `GET /notification/client/{clientId}/recent` | Retorna todas, não lidas e recentes do cliente. | ☐ |
+| A-149 | Notificações falhadas | 1. Endpoint `GET /notification/failed` | Lista notificações que falharam no envio. | ☐ |
+| A-150 | Estatísticas de notificações | 1. Endpoint `GET /notification/stats` | Retorna total enviadas, lidas, falhadas, taxa de abertura. | ☐ |
+| A-151 | Limpar notificações antigas | 1. Endpoint `DELETE /notification/client/{clientId}/old` | Remove notificações antigas do cliente. | ☐ |
 
-### 2.13 Agenda do Barbeiro (`/agenda-barbeiro`)
+### 2.14 Agenda do Barbeiro (`/agenda-barbeiro`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -210,8 +269,16 @@
 | A-76 | Cadastrar folga | 1. Selecionar barbeiro 2. Registrar dia de folga | Barbeiro indisponível no dia. | ☐ |
 | A-77 | Definir pausa para almoço | 1. Selecionar barbeiro 2. Definir horário de almoço | Horário bloqueado para almoço diariamente. | ☐ |
 | A-78 | Verificar disponibilidade | 1. Endpoint `/barber-schedule/availability/check` | Retorna se barbeiro está disponível em determinado horário. | ☐ |
+| A-152 | Listar férias do barbeiro | 1. Endpoint `GET /barber-schedule/barber/{id}/vacations` | Retorna períodos de férias cadastrados. | ☐ |
+| A-153 | Listar horários recorrentes | 1. Endpoint `GET /barber-schedule/barber/{id}/recurring` | Retorna configurações de horário recorrente. | ☐ |
+| A-154 | Ver dias de férias | 1. Endpoint `GET /barber-schedule/barber/{id}/vacation-days` | Retorna lista de dias de férias agendados. | ☐ |
+| A-155 | Ver slots disponíveis | 1. Endpoint `GET /barber-schedule/availability/slots?barberId=...&date=...` | Retorna horários disponíveis para agendamento. | ☐ |
+| A-156 | Ver barbeiros disponíveis | 1. Endpoint `GET /barber-schedule/availability/barbers?date=...&time=...` | Retorna lista de barbeiros disponíveis no horário. | ☐ |
+| A-157 | Editar entrada de agenda | 1. `PUT /barber-schedule/{id}` com novos dados | Entrada de agenda atualizada. | ☐ |
+| A-158 | Desativar entrada de agenda | 1. `POST /barber-schedule/{id}/deactivate` | Entrada desativada (não deletada). | ☐ |
+| A-159 | Excluir entrada de agenda | 1. `DELETE /barber-schedule/{id}` | Entrada removida da agenda. | ☐ |
 
-### 2.14 Barbearias (`/barbearias`)
+### 2.15 Barbearias (`/barbearias`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -221,16 +288,26 @@
 | A-82 | Ativar/desativar barbearia | 1. Toggle status ativo/inativo | Status alterado. Barbearia inativa não aparece para clientes. | ☐ |
 | A-83 | Vincular barbeiro à barbearia | 1. Selecionar barbearia 2. Associar barbeiro | Barbeiro vinculado à barbearia. | ☐ |
 | A-84 | Desvincular barbeiro | 1. Remover barbeiro da barbearia | Barbeiro desvinculado. | ☐ |
+| A-160 | Buscar barbearia por ID | 1. Endpoint `GET /barbershop/{id}` | Retorna dados completos da barbearia. | ☐ |
+| A-161 | Buscar barbearias por nome | 1. Endpoint `GET /barbershop/search?name=GoBarber` | Lista barbearias que correspondem à busca. | ☐ |
+| A-162 | Ver barbearias do cliente | 1. Endpoint `GET /barbershop/client/{clientId}` | Lista barbearias vinculadas ao cliente. | ☐ |
+| A-163 | Vincular cliente à barbearia | 1. `POST /barbershop/{barbershopId}/client/{clientId}` | Cliente associado à barbearia. | ☐ |
+| A-164 | Desvincular cliente da barbearia | 1. `DELETE /barbershop/{barbershopId}/client/{clientId}` | Cliente desassociado. | ☐ |
+| A-165 | Excluir barbearia | 1. `DELETE /barbershop/{id}` 2. Confirmar | Barbearia removida do sistema. | ☐ |
 
-### 2.15 Regras de Cancelamento (`/cancellation-rules` — API)
+### 2.16 Regras de Cancelamento (`/cancellation-rules` — API)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
 | A-85 | Listar regras de cancelamento | 1. Endpoint `GET /cancellation-rules` | Lista regras existentes. | ☐ |
 | A-86 | Criar regra | 1. `POST /cancellation-rules` com antecedência mínima e taxa | Regra criada. | ☐ |
 | A-87 | Ativar/desativar regra | 1. `POST /cancellation-rules/{id}/toggle` | Status da regra alterado. | ☐ |
+| A-166 | Ver regras ativas | 1. Endpoint `GET /cancellation-rules/active` | Lista apenas regras ativas. | ☐ |
+| A-167 | Ver regra por ID | 1. Endpoint `GET /cancellation-rules/{id}` | Retorna dados completos de uma regra de cancelamento. | ☐ |
+| A-168 | Editar regra de cancelamento | 1. `PUT /cancellation-rules/{id}` com novos parâmetros | Regra atualizada com sucesso. | ☐ |
+| A-169 | Excluir regra de cancelamento | 1. `DELETE /cancellation-rules/{id}` 2. Confirmar | Regra removida. | ☐ |
 
-### 2.16 Lista de Espera (`/lista-espera`)
+### 2.17 Lista de Espera (`/lista-espera`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -239,8 +316,17 @@
 | A-90 | Notificar cliente da espera | 1. Selecionar registro 2. Notificar | Notificação enviada ao cliente. | ☐ |
 | A-91 | Converter espera em agendamento | 1. Selecionar registro 2. Converter | Agendamento criado a partir da espera. Registro removido da lista. | ☐ |
 | A-92 | Remover da espera | 1. Excluir registro | Registro removido. | ☐ |
+| A-170 | Ver entrada por ID | 1. Endpoint `GET /waitlist/{id}` | Retorna dados completos de um registro na lista de espera. | ☐ |
+| A-171 | Filtrar por barbeiro | 1. `GET /waitlist/barber/{barberId}` 2. `GET /waitlist/barber/{barberId}/waiting` | Lista registros e aguardando por barbeiro específico. | ☐ |
+| A-172 | Filtrar por cliente | 1. Endpoint `GET /waitlist/client/{clientId}` | Lista registros de espera do cliente. | ☐ |
+| A-173 | Filtrar por serviço | 1. Endpoint `GET /waitlist/service/{serviceId}` | Lista registros de espera para o serviço. | ☐ |
+| A-174 | Alterar prioridade | 1. `PUT /waitlist/{id}/priority` com novo valor | Prioridade do registro atualizada. | ☐ |
+| A-175 | Adicionar notas | 1. `PUT /waitlist/{id}/notes` com texto | Notas adicionadas ao registro de espera. | ☐ |
+| A-176 | Processar expirados | 1. Endpoint `POST /waitlist/process-expired` | Registros expirados são processados e removidos. | ☐ |
+| A-177 | Estatísticas gerais da espera | 1. Endpoint `GET /waitlist/stats` | Retorna estatísticas: total, média de espera, taxa de conversão. | ☐ |
+| A-178 | Estatísticas por barbeiro | 1. Endpoint `GET /waitlist/stats/barber/{barberId}` | Retorna estatísticas de espera do barbeiro específico. | ☐ |
 
-### 2.17 Relatórios (`/relatorios`)
+### 2.18 Relatórios (`/relatorios`)
 
 | # | Caso de Teste | Passos | Resultado Esperado | Status |
 |---|--------------|--------|-------------------|--------|
@@ -463,6 +549,11 @@
 |---|--------------|--------|-------------------|--------|
 | C-20 | Tentar acessar `/clientes` | 1. Navegar para `/clientes` | Acesso negado ou redirecionado. | ☐ |
 | C-21 | Tentar criar barbeiro | 1. `POST /barber` | Retorna 403 Forbidden. | ☐ |
+| P-10 | Buscar barbearias na landing page | 1. Acessar `http://localhost:3000` 2. Digitar no campo de busca "GoBarber" 3. Endpoint `GET /public/barbershops/search?name=GoBarber` | Lista barbearias que correspondem à busca exibida na landing page. | ☐ |
+| P-11 | Ver barbeiros da barbearia (slug) | 1. Acessar `/b/gobarber-principal` 2. Endpoint `GET /public/barbershops/gobarber-principal/barbers` | Lista barbeiros vinculados à barbearia com serviços e fotos. | ☐ |
+| P-12 | Ver detalhe do barbeiro | 1. Na página da barbearia, clicar em um barbeiro 2. Endpoint `GET /public/barbers/{id}` | Modal exibe dados completos do barbeiro: nome, serviços, avaliações. | ☐ |
+| P-13 | Ver disponibilidade de horários | 1. Acessar `/b/gobarber-principal/agendar` 2. Selecionar barbeiro e data 3. `GET /public/barbers/{barberId}/availability?date=2026-03-01` | Lista horários disponíveis para agendamento. | ☐ |
+| P-14 | Realizar agendamento público | 1. No fluxo de agendamento, selecionar serviço, barbeiro, data/hora 2. `POST /public/booking` com dados 3. Confirmar | Agendamento criado com status PENDING. Mensagem de confirmação exibida. | ☐ |
 | C-22 | Tentar acessar dashboard admin | 1. Navegar para `/dashboard` | Acesso negado ou dados limitados. | ☐ |
 | C-23 | Tentar aprovar agendamento | 1. `POST /appointments/{id}/approve` | Retorna 403 Forbidden. | ☐ |
 | C-24 | Tentar criar pagamento | 1. `POST /payment` | Retorna 403 Forbidden. | ☐ |
@@ -521,6 +612,13 @@ Verificações rápidas para garantir que as correções recentes não quebraram
 | R-09 | Cliente gênero vazio | Criar cliente sem gênero não dá erro de enum | ☐ |
 | R-10 | Cliente telefone — strip non-digits | Telefone enviado apenas com dígitos `\d{10,11}` | ☐ |
 | R-11 | Secretária salário/carga — tipo numérico | Criar/editar secretária com salário e carga horária funciona | ☐ |
+| R-12 | 403 vs 401 — Redirect fix | Acessar endpoint sem permissão retorna 403 (e NÃO redireciona para login). Só 401 redireciona. | ☐ |
+| R-13 | Loja acessível para CLIENT | Cliente acessa `/loja` e vê produtos e promoções válidas. | ☐ |
+| R-14 | JWT user ID — jti vs sub | Token JWT decodificado: `jti` contém user ID, `sub` contém email. AuthContext usa `jti`. | ☐ |
+| R-15 | Dashboard barbeiro — só seus agendamentos | Barbeiro logado vê apenas seus próprios agendamentos no dashboard. | ☐ |
+| R-16 | Notificação teste — clientId correto | Enviar notificação de teste usa ID do cliente (não do empregado logado). | ☐ |
+| R-17 | Endpoints públicos funcionais | `/public/barbershops/search`, `/public/barbershops/{slug}/barbers`, `/public/barbers/{id}/availability`, `POST /public/booking` retornam dados. | ☐ |
+| R-18 | ClientController 501s corrigidos | 11 endpoints (top-spenders, inactive-clients, loyalty-discount, etc.) retornam dados reais, não 501. | ☐ |
 
 ### 8.2 Smoke Tests (API via cURL)
 
@@ -551,7 +649,7 @@ curl -s http://localhost:8082/client \
   -H "Authorization: $TOKEN"
 # Esperado: Lista de clientes
 
-# 5. Listar serviços
+# 5. Listar servicos
 curl -s http://localhost:8082/services \
   -H "Authorization: $TOKEN"
 # Esperado: Lista de 12 serviços
@@ -566,7 +664,7 @@ curl -s http://localhost:8082/dashboard \
   -H "Authorization: $TOKEN"
 # Esperado: Dados do dashboard
 
-# 8. Teste 403 — Barbeiro tentando criar cliente
+# 8. Teste 403 - Barbeiro tentando criar cliente
 TOKEN_BARBER=$(curl -s -X POST http://localhost:8082/auth \
   -H "Content-Type: application/json" \
   -d '{"login":"carlos.barbeiro@gobarber.com","password":"password"}' | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
@@ -577,9 +675,31 @@ curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8082/client/crea
   -d '{"name":"Nao Deve Criar","email":"x@x.com","phone":"11999990000","cpf":"00000000000"}'
 # Esperado: 403
 
-# 9. Teste 401 — Sem token
+# 9. Teste 401 - Sem token
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8082/client
 # Esperado: 401
+
+# 10. Buscar barbearias (público)
+curl -s "http://localhost:8082/public/barbershops/search?name=GoBarber"
+# Esperado: Lista de barbearias
+
+# 11. Ver barbeiros da barbearia por slug (público)
+curl -s http://localhost:8082/public/barbershops/gobarber-principal/barbers
+# Esperado: Lista de barbeiros da barbearia
+
+# 12. Ver disponibilidade (público)
+curl -s "http://localhost:8082/public/barbers/1/availability?date=2026-03-01"
+# Esperado: Lista de horários disponíveis
+
+# 13. Dashboard KPIs (autenticado)
+curl -s http://localhost:8082/dashboard/kpis \
+  -H "Authorization: $TOKEN"
+# Esperado: KPIs do sistema
+
+# 14. ClientController (antes 501)
+curl -s http://localhost:8082/client/total-clients \
+  -H "Authorization: $TOKEN"
+# Esperado: Número total de clientes (não 501)
 ```
 
 ---
@@ -600,11 +720,11 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:8082/client
 
 ---
 
-> **Total de Casos de Teste:** 153  
-> - ADMIN: 97 casos (A-01 a A-97)  
+> **Total de Casos de Teste:** 289  
+> - ADMIN: 178 casos (A-01 a A-97 + A-98 a A-178)  
 > - SECRETARY: 27 casos (S-01 a S-27)  
 > - BARBER: 20 casos (B-01 a B-20)  
 > - CLIENT: 24 casos (C-01 a C-24)  
-> - Público: 9 casos (P-01 a P-09)  
+> - Público: 14 casos (P-01 a P-14)  
 > - Integração: 8 casos (I-01 a I-08)  
-> - Regressão: 11 casos (R-01 a R-11)
+> - Regressão: 18 casos (R-01 a R-18)
