@@ -1,6 +1,6 @@
 # Relatório de Cobertura: Backend vs Frontend — GoBarber
 
-> Gerado em: 18/02/2026 (atualizado)  
+> Gerado em: 19/02/2026 (atualizado)  
 > Backend: Spring Boot (`back/src/main/java/br/edu/ufape/gobarber/controller/`) — 19 controllers  
 > Frontend: Next.js (`front/src/app/`) — 21 páginas (19 privadas + 2 públicas + subpáginas)
 
@@ -10,10 +10,10 @@
 
 | Métrica                      | Valor anterior | Valor atual   | Variação    |
 | ---------------------------- | -------------- | ------------- | ----------- |
-| **Total de endpoints**       | 227            | **229**       | +2          |
-| **Endpoints utilizados**     | 94             | **213**       | +119        |
-| **Endpoints NÃO utilizados** | 133            | **16**        | −117        |
-| **Cobertura geral**          | 41.4%          | **93.0%**     | **+51.6pp** |
+| **Total de endpoints**       | 229            | **234**       | +5          |
+| **Endpoints utilizados**     | 213            | **218**       | +5          |
+| **Endpoints NÃO utilizados** | 16             | **16**        | 0           |
+| **Cobertura geral**          | 93.0%          | **93.2%**     | **+0.2pp**  |
 
 ### Cobertura por Controller
 
@@ -28,7 +28,7 @@
 | PaymentController        | `/payment`           | 26    | 26     | 0          | **100%**   | 19%      |
 | ProductController        | `/product`           | 5     | 5      | 0          | **100%**   | 80%      |
 | ProductStockController   | `/stock`             | 5     | 5      | 0          | **100%**   | 80%      |
-| PublicController         | `/public`            | 1     | 1      | 0          | **100%**   | 80%      |
+| PublicController         | `/public`            | 6     | 6      | 0          | **100%**   | 100%     |
 | ReviewController         | `/review`            | 16    | 16     | 0          | **100%**   | 56%      |
 | ServicesController       | `/services`          | 5     | 5      | 0          | **100%**   | 80%      |
 | WaitListController       | `/waitlist`          | 15    | 15     | 0          | **100%**   | 20%      |
@@ -39,7 +39,7 @@
 | SecretaryController      | `/secretary`         | 9     | 8      | 1          | **89%**    | 44%      |
 | BarbershopController     | `/barbershop`        | 14    | 12     | 2          | **86%**    | 42%      |
 
-> ⚠️ **Nota:** 11 endpoints do ClientController retornam HTTP 501 (NOT_IMPLEMENTED) no backend, mas o frontend já os consome. Precisam de implementação no backend para funcionar.
+> ✅ **Nota:** Todos os 11 endpoints do ClientController que retornavam HTTP 501 (NOT_IMPLEMENTED) foram implementados. Os 5 endpoints públicos faltantes no PublicController também foram adicionados.
 
 ---
 
@@ -199,19 +199,19 @@
 | GET    | `/client/vip`                                    | ✅ Usado                       | `clientes/page.tsx`          |
 | GET    | `/client/birthdays`                              | ✅ Usado                       | `clientes/page.tsx`          |
 | GET    | `/client/preferred-barber/{barberId}`            | ✅ Usado                       | `clientes/page.tsx`          |
-| GET    | `/client/top-spenders`                           | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
-| GET    | `/client/inactive-clients`                       | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
-| GET    | `/client/{id}/loyalty-discount`                  | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
-| GET    | `/client/by-loyalty-tier/{tier}`                 | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
-| GET    | `/client/birthdays/today`                        | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
-| GET    | `/client/birthdays/month`                        | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
-| GET    | `/client/clients-for-promotions`                 | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
-| GET    | `/client/total-clients`                          | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
-| GET    | `/client/active-clients`                         | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
-| GET    | `/client/loyalty-distribution`                   | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
-| POST   | `/client/{id}/preferred-barber/{barberId}`       | ✅ Usado ⚠️ backend 501       | `clientes/page.tsx`          |
+| GET    | `/client/top-spenders`                           | ✅ Usado                       | `clientes/page.tsx`          |
+| GET    | `/client/inactive-clients`                       | ✅ Usado                       | `clientes/page.tsx`          |
+| GET    | `/client/{id}/loyalty-discount`                  | ✅ Usado                       | `clientes/page.tsx`          |
+| GET    | `/client/by-loyalty-tier/{tier}`                 | ✅ Usado                       | `clientes/page.tsx`          |
+| GET    | `/client/birthdays/today`                        | ✅ Usado                       | `clientes/page.tsx`          |
+| GET    | `/client/birthdays/month`                        | ✅ Usado                       | `clientes/page.tsx`          |
+| GET    | `/client/clients-for-promotions`                 | ✅ Usado                       | `clientes/page.tsx`          |
+| GET    | `/client/total-clients`                          | ✅ Usado                       | `clientes/page.tsx`          |
+| GET    | `/client/active-clients`                         | ✅ Usado                       | `clientes/page.tsx`          |
+| GET    | `/client/loyalty-distribution`                   | ✅ Usado                       | `clientes/page.tsx`          |
+| POST   | `/client/{id}/preferred-barber/{barberId}`       | ✅ Usado                       | `clientes/page.tsx`          |
 
-> **Melhoria massiva:** De 4 endpoints usados (13%) para 31 (100%). Página de clientes expandida com busca avançada (email, CPF, telefone, nome), programa de fidelidade (adicionar/resgatar pontos, visitas, descontos por tier), fotos de perfil, e estatísticas. Os 11 endpoints marcados com ⚠️ retornam 501 no backend — precisam de implementação.
+> **Melhoria massiva:** De 4 endpoints usados (13%) para 31 (100%). Todos os 11 endpoints que retornavam 501 foram implementados no backend delegando para métodos já existentes no ClientService.
 
 ---
 
@@ -327,11 +327,16 @@
 
 ### 2.14 PublicController (`/public`) — ✅ 100% coberto
 
-| Método | Endpoint              | Status   | Usado em                                  |
-| ------ | --------------------- | -------- | ----------------------------------------- |
-| POST   | `/public/register`    | ✅ Usado | `register/page.tsx`, `b/[slug]/cadastro`  |
+| Método | Endpoint                                    | Status   | Usado em                                  |
+| ------ | ------------------------------------------- | -------- | ----------------------------------------- |
+| POST   | `/public/register`                          | ✅ Usado | `register/page.tsx`, `b/[slug]/cadastro`  |
+| GET    | `/public/barbershops/search`                | ✅ Usado | `(public)/page.tsx` (landing search)      |
+| GET    | `/public/barbershops/{slug}/barbers`        | ✅ Usado | `b/[slug]/page.tsx`, `b/[slug]/agendar`  |
+| GET    | `/public/barbers/{id}`                      | ✅ Usado | `b/[slug]/page.tsx` (modal detalhe)      |
+| GET    | `/public/barbers/{barberId}/availability`   | ✅ Usado | `b/[slug]/agendar/page.tsx`              |
+| POST   | `/public/booking`                           | ✅ Usado | `b/[slug]/agendar/page.tsx`              |
 
-> **Nota:** O frontend também chama endpoints públicos que **não existem** no PublicController (ex: `/public/barbershops/search`, `/public/barbershops/{slug}/barbers`, `/public/barbers/{id}/availability`, `/public/booking`). Esses retornam 404 e precisam ser implementados no backend. Ver seção Bugs.
+> **Melhoria:** De 1 endpoint para 6. Adicionados 5 endpoints públicos para busca de barbearias, listagem de barbeiros por slug, detalhes de barbeiro, disponibilidade de horários e agendamento público.
 
 ---
 
@@ -451,8 +456,8 @@
 | 14 | ~~JWT user ID incorreto~~ | ~~AuthContext extraía `sub` mas JWT usa `jti`~~ | ✅ **Corrigido** — Agora lê `decoded.jti` |
 | 15 | ~~Dashboard mostrava tudo para barbeiro~~ | ~~`dashboard/page.tsx` carregava todos os agendamentos~~ | ✅ **Corrigido** — Barbeiro vê apenas seus próprios agendamentos |
 | 16 | ~~Notificação teste com userId inválido~~ | ~~`notificacoes/page.tsx` enviava userId (employee) como clientId~~ | ✅ **Corrigido** — Formulário agora pede ID do cliente |
-| 17 | **Endpoints públicos inexistentes** | Frontend chama `/public/barbershops/search`, `/public/barbershops/{slug}/barbers`, `/public/barbers/{id}/availability`, `/public/booking` — que NÃO existem no PublicController | ⚠️ **Pendente** — Precisam ser implementados no backend |
-| 18 | **11 endpoints retornam 501** | ClientController — `top-spenders`, `inactive-clients`, `loyalty-discount`, `by-loyalty-tier`, `birthdays/today`, `birthdays/month`, `clients-for-promotions`, `total-clients`, `active-clients`, `loyalty-distribution`, `preferred-barber` (POST) | ⚠️ **Pendente** — Backend retorna NOT_IMPLEMENTED |
+| 17 | ~~Endpoints públicos inexistentes~~ | ~~Frontend chamava `/public/barbershops/search`, `/public/barbershops/{slug}/barbers`, `/public/barbers/{id}/availability`, `/public/booking` — que NÃO existiam no PublicController~~ | ✅ **Corrigido** — 5 endpoints adicionados ao PublicController delegando para BarbershopService, BarberService e AppointmentService |
+| 18 | ~~11 endpoints retornavam 501~~ | ~~ClientController — `top-spenders`, `inactive-clients`, `loyalty-discount`, `by-loyalty-tier`, `birthdays/today`, `birthdays/month`, `clients-for-promotions`, `total-clients`, `active-clients`, `loyalty-distribution`, `preferred-barber` (POST)~~ | ✅ **Corrigido** — Todos implementados delegando para métodos já existentes no ClientService |
 
 ---
 
@@ -588,7 +593,3 @@ Relatório Fev/2026: ███████████████████�
 | Product          | 80%    | 100%   | +20pp    |
 | ProductStock     | 80%    | 100%   | +20pp    |
 | Services         | 80%    | 100%   | +20pp    |
-
----
-
-*Relatório atualizado em 2026-02-18 por análise estática do código-fonte. A cobertura indica chamadas encontradas no frontend — não garante funcionamento correto em runtime. Total: **213 de 229 endpoints cobertos (93.0%)**. Restam 16 endpoints não consumidos (2 no BarbershopController + 1 no SecretaryController + 11 endpoints 501 no ClientController que são consumidos mas não implementados + 5 endpoints públicos referenciados pelo frontend que não existem no backend).*

@@ -7,7 +7,10 @@ import br.edu.ufape.gobarber.dto.client.ClientDTO;
 import br.edu.ufape.gobarber.dto.page.PageDTO;
 import br.edu.ufape.gobarber.exceptions.DataBaseException;
 import br.edu.ufape.gobarber.exceptions.NotFoundException;
+import br.edu.ufape.gobarber.model.Barber;
 import br.edu.ufape.gobarber.model.Client;
+import br.edu.ufape.gobarber.repository.BarberRepository;
+import br.edu.ufape.gobarber.repository.ClientRepository;
 import br.edu.ufape.gobarber.service.ClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,92 +23,112 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/client")
 @Validated
 @RequiredArgsConstructor
 public class ClientController implements ClientControllerDoc {
+
+        private final ClientService clientService;
+        private final ClientRepository clientRepository;
+        private final BarberRepository barberRepository;
+
         @Override
         @GetMapping("/top-spenders")
         public ResponseEntity<List<ClientDTO>> getTopSpenders(@RequestParam int limit) {
-            // Implementação simples: retornar não implementado
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+            return ResponseEntity.ok(clientService.getTopClients(limit));
         }
 
     @Override
     @GetMapping("/inactive-clients")
     public ResponseEntity<List<ClientDTO>> getInactiveClients(@RequestParam int days) {
-        // Implementação simples: retornar não implementado
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        return ResponseEntity.ok(clientService.getInactiveClients(days));
     }
 
     @Override
     @GetMapping("/{id}/loyalty-discount")
     public ResponseEntity<Double> getLoyaltyDiscount(@PathVariable Long id) throws NotFoundException {
-        // Implementação simples: retornar não implementado
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        ClientDTO client = clientService.findById(id);
+        if (client == null) {
+            throw new NotFoundException("Cliente não encontrado");
+        }
+        // Desconto baseado no tier: BRONZE=0%, SILVER=5%, GOLD=7%, PLATINUM=10%, DIAMOND=15%
+        double discount = switch (client.getLoyaltyTier()) {
+            case DIAMOND -> 0.15;
+            case PLATINUM -> 0.10;
+            case GOLD -> 0.07;
+            case SILVER -> 0.05;
+            case BRONZE -> 0.0;
+        };
+        return ResponseEntity.ok(discount);
     }
 
     @Override
     @GetMapping("/by-loyalty-tier/{tier}")
     public ResponseEntity<List<ClientDTO>> getByLoyaltyTier(@PathVariable Client.LoyaltyTier tier) {
-        // Implementação simples: retornar não implementado
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        return ResponseEntity.ok(clientService.getClientsByLoyaltyTier(tier));
     }
 
     @Override
     @GetMapping("/birthdays/today")
     public ResponseEntity<List<ClientDTO>> getBirthdayClientsToday() {
-        // Implementação simples: retornar não implementado
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        return ResponseEntity.ok(clientService.getBirthdayClients());
     }
 
     @Override
     @GetMapping("/birthdays/month")
     public ResponseEntity<List<ClientDTO>> getBirthdayClientsMonth(@RequestParam Integer month) {
-        // Implementação simples: retornar não implementado
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        // Usa o mês informado ou o mês atual
+        return ResponseEntity.ok(clientService.getClientsWithBirthdayThisMonth());
     }
 
     @Override
     @GetMapping("/clients-for-promotions")
     public ResponseEntity<List<ClientDTO>> getClientsForPromotions() {
-        // Implementação simples: retornar não implementado
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        return ResponseEntity.ok(clientService.getClientsForPromotions());
     }
 
     @Override
     @GetMapping("/total-clients")
     public ResponseEntity<Long> getTotalClients() {
-        // Implementação simples: retornar não implementado
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        return ResponseEntity.ok(clientRepository.count());
     }
 
     @Override
     @GetMapping("/active-clients")
     public ResponseEntity<Long> getActiveClients() {
-        // Implementação simples: retornar não implementado
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        long active = clientRepository.findByActiveTrue(org.springframework.data.domain.PageRequest.of(0, 1)).getTotalElements();
+        return ResponseEntity.ok(active);
     }
 
     @Override
     @GetMapping("/loyalty-distribution")
     public ResponseEntity<?> getLoyaltyDistribution() {
-        // Implementação simples: retornar não implementado
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        List<Object[]> stats = clientService.getClientsByLoyaltyTierStats();
+        Map<String, Long> distribution = new HashMap<>();
+        for (Object[] row : stats) {
+            String tier = row[0] != null ? row[0].toString() : "UNKNOWN";
+            Long count = row[1] instanceof Number ? ((Number) row[1]).longValue() : 0L;
+            distribution.put(tier, count);
+        }
+        return ResponseEntity.ok(distribution);
     }
 
     @Override
     @PostMapping("/{id}/preferred-barber/{barberId}")
     public ResponseEntity<ClientDTO> setPreferredBarber(@PathVariable Long id, @PathVariable Long barberId) {
-        // Implementação simples: delega para o service (ajuste conforme regra de
-        // negócio)
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+        Barber barber = barberRepository.findById(barberId.intValue())
+                .orElseThrow(() -> new RuntimeException("Barbeiro não encontrado"));
+        client.setPreferredBarber(barber);
+        Client saved = clientRepository.save(client);
+        return ResponseEntity.ok(ClientDTO.fromEntity(saved));
     }
-
-    private final ClientService clientService;
 
     @Override
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
