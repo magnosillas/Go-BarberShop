@@ -6,19 +6,19 @@ import React, { useEffect, useState } from "react";
 import { generica } from "@/api/api";
 import { toast } from "react-toastify";
 import { FaPlus, FaEdit, FaTrash, FaMapMarkerAlt, FaEye } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface Address {
   idAddress: number;
   street?: string;
   number?: string;
-  complement?: string;
   neighborhood?: string;
   city?: string;
   state?: string;
   cep?: string;
 }
 
-const initialForm = { street: "", number: "", complement: "", neighborhood: "", city: "", state: "", cep: "" };
+const initialForm = { street: "", number: "", neighborhood: "", city: "", state: "", cep: "" };
 
 export default function EnderecosPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -54,7 +54,7 @@ export default function EnderecosPage() {
 
   function openEdit(a: Address) {
     setForm({
-      street: a.street || "", number: a.number || "", complement: a.complement || "",
+      street: a.street || "", number: a.number || "",
       neighborhood: a.neighborhood || "", city: a.city || "", state: a.state || "", cep: a.cep || "",
     });
     setEditingId(a.idAddress);
@@ -65,15 +65,25 @@ export default function EnderecosPage() {
   // PUT /address/{id} — update address
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.street || !form.city) { toast.error("Preencha rua e cidade"); return; }
+    if (!form.street || !form.neighborhood || !form.city || !form.state) { toast.error("Preencha rua, bairro, cidade e estado"); return; }
     setSaving(true);
+    // Strip non-digit chars from CEP (DB column is varchar(8), digits only)
+    const cleanCep = form.cep ? form.cep.replace(/\D/g, "").substring(0, 8) : "";
+    const payload = {
+      street: form.street.substring(0, 80),
+      number: form.number ? parseInt(form.number, 10) : null,
+      neighborhood: form.neighborhood.substring(0, 30),
+      city: form.city.substring(0, 30),
+      state: form.state.substring(0, 2).toUpperCase(),
+      cep: cleanCep || null,
+    };
     try {
       if (editingId) {
-        const res = await generica({ metodo: "PUT", uri: `/address/${editingId}`, data: { idAddress: editingId, ...form } });
+        const res = await generica({ metodo: "PUT", uri: `/address/${editingId}`, data: { idAddress: editingId, ...payload } });
         if (res?.status === 200) { toast.success("Endereço atualizado!"); setModalOpen(false); loadAddresses(); }
         else toast.error("Erro ao atualizar");
       } else {
-        const res = await generica({ metodo: "POST", uri: "/address", data: form });
+        const res = await generica({ metodo: "POST", uri: "/address", data: payload });
         if (res?.status === 200 || res?.status === 201) { toast.success("Endereço cadastrado!"); setModalOpen(false); loadAddresses(); }
         else toast.error(res?.data?.message || "Erro ao cadastrar");
       }
@@ -83,7 +93,17 @@ export default function EnderecosPage() {
 
   // DELETE /address/{id} — delete address
   async function handleDelete(id: number) {
-    if (!confirm("Excluir este endereço?")) return;
+    const result = await Swal.fire({
+      title: "Excluir endereço?",
+      text: "Deseja realmente excluir este endereço?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/address/${id}` });
       if (res?.status === 200 || res?.status === 204) { toast.success("Endereço excluído!"); loadAddresses(); }
@@ -143,14 +163,10 @@ export default function EnderecosPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
               <input type="text" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} className="gobarber-input" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
-              <input type="text" value={form.complement} onChange={(e) => setForm({ ...form, complement: e.target.value })} className="gobarber-input" />
-            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
-            <input type="text" value={form.neighborhood} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} className="gobarber-input" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bairro *</label>
+            <input type="text" value={form.neighborhood} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} className="gobarber-input" required />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -158,13 +174,18 @@ export default function EnderecosPage() {
               <input type="text" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="gobarber-input" required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-              <input type="text" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="gobarber-input" maxLength={2} placeholder="UF" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
+              <input type="text" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="gobarber-input" maxLength={2} placeholder="UF" required />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
-            <input type="text" value={form.cep} onChange={(e) => setForm({ ...form, cep: e.target.value })} className="gobarber-input" maxLength={8} placeholder="00000000" />
+            <input type="text" value={form.cep} onChange={(e) => {
+              // Allow digits and dash, auto-format to XXXXX-XXX
+              const digits = e.target.value.replace(/\D/g, "").substring(0, 8);
+              const formatted = digits.length > 5 ? digits.substring(0, 5) + "-" + digits.substring(5) : digits;
+              setForm({ ...form, cep: formatted });
+            }} className="gobarber-input" maxLength={9} placeholder="00000-000" />
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t">
             <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
@@ -184,7 +205,6 @@ export default function EnderecosPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-gray-50 p-3 rounded-lg"><p className="text-xs text-gray-500">Rua</p><p className="font-medium">{detailAddress.street || "—"}</p></div>
               <div className="bg-gray-50 p-3 rounded-lg"><p className="text-xs text-gray-500">Número</p><p className="font-medium">{detailAddress.number || "—"}</p></div>
-              <div className="bg-gray-50 p-3 rounded-lg"><p className="text-xs text-gray-500">Complemento</p><p className="font-medium">{detailAddress.complement || "—"}</p></div>
               <div className="bg-gray-50 p-3 rounded-lg"><p className="text-xs text-gray-500">Bairro</p><p className="font-medium">{detailAddress.neighborhood || "—"}</p></div>
               <div className="bg-gray-50 p-3 rounded-lg"><p className="text-xs text-gray-500">Cidade</p><p className="font-medium">{detailAddress.city || "—"}</p></div>
               <div className="bg-gray-50 p-3 rounded-lg"><p className="text-xs text-gray-500">Estado</p><p className="font-medium">{detailAddress.state || "—"}</p></div>

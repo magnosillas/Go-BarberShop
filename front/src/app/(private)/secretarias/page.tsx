@@ -6,6 +6,8 @@ import React, { useEffect, useState } from "react";
 import { generica } from "@/api/api";
 import { toast } from "react-toastify";
 import { FaPlus, FaEdit, FaTrash, FaUserShield, FaEye, FaCamera, FaUser } from "react-icons/fa";
+import { useRoles } from "@/hooks";
+import Swal from "sweetalert2";
 
 interface Secretary {
   idSecretary: number;
@@ -36,6 +38,7 @@ const initialForm = {
 };
 
 export default function SecretariasPage() {
+  const { hasRole } = useRoles();
   const [secretaries, setSecretaries] = useState<Secretary[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -47,7 +50,7 @@ export default function SecretariasPage() {
   const [loggedSecretary, setLoggedSecretary] = useState<Secretary | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
-  useEffect(() => { loadSecretaries(); loadLoggedSecretary(); }, []);
+  useEffect(() => { loadSecretaries(); if (hasRole("SECRETARY")) loadLoggedSecretary(); }, []);
 
   async function loadSecretaries() {
     setLoading(true);
@@ -80,8 +83,8 @@ export default function SecretariasPage() {
   async function loadSecretaryPhoto(id: number) {
     try {
       const res = await generica({ metodo: "GET", uri: `/secretary/${id}/profile-photo`, responseType: "blob" });
-      if (res?.data) {
-        const url = URL.createObjectURL(new Blob([res.data]));
+      if (res?.status === 200 && res?.data) {
+        const url = URL.createObjectURL(res.data instanceof Blob ? res.data : new Blob([res.data]));
         setProfilePhoto(url);
       } else { setProfilePhoto(null); }
     } catch { setProfilePhoto(null); }
@@ -91,8 +94,8 @@ export default function SecretariasPage() {
   async function loadLoggedSecretaryPicture() {
     try {
       const res = await generica({ metodo: "GET", uri: "/secretary/logged-secretary/picture", responseType: "blob" });
-      if (res?.data) {
-        const url = URL.createObjectURL(new Blob([res.data]));
+      if (res?.status === 200 && res?.data) {
+        const url = URL.createObjectURL(res.data instanceof Blob ? res.data : new Blob([res.data]));
         setProfilePhoto(url);
       }
     } catch { /* no photo */ }
@@ -129,13 +132,18 @@ export default function SecretariasPage() {
     e.preventDefault();
     if (!form.name || !form.email) { toast.error("Nome e email são obrigatórios"); return; }
     setSaving(true);
+    // Sanitize CEP: strip non-digits (DB column is varchar(8))
+    const sanitizedForm = {
+      ...form,
+      address: { ...form.address, cep: form.address.cep?.replace(/\D/g, "").substring(0, 8) || "" },
+    };
     try {
       if (editingId) {
         // Update usa multipart — enviar como JSON string
         const formData = new FormData();
-        const secretaryData = { ...form,
-          salary: form.salary ? parseFloat(String(form.salary)) : 0,
-          workload: form.workload ? parseInt(String(form.workload), 10) : 0,
+        const secretaryData = { ...sanitizedForm,
+          salary: sanitizedForm.salary ? parseFloat(String(sanitizedForm.salary)) : 0,
+          workload: sanitizedForm.workload ? parseInt(String(sanitizedForm.workload), 10) : 0,
         };
         if (!secretaryData.password) {
           const { password, ...rest } = secretaryData;
@@ -143,6 +151,7 @@ export default function SecretariasPage() {
         } else {
           formData.append("secretary", JSON.stringify(secretaryData));
         }
+        if (photoFile) formData.append("profilePhoto", photoFile);
         const res = await generica({
           metodo: "PUT",
           uri: `/secretary/${editingId}`,
@@ -151,13 +160,13 @@ export default function SecretariasPage() {
         if (res?.status === 200) { toast.success("Secretária atualizada!"); setModalOpen(false); loadSecretaries(); }
         else toast.error("Erro ao atualizar");
       } else {
-        if (!form.password) { toast.error("Senha é obrigatória para novo cadastro"); setSaving(false); return; }
+        if (!sanitizedForm.password) { toast.error("Senha é obrigatória para novo cadastro"); setSaving(false); return; }
         // POST /secretary (multipart with photo)
         const formData = new FormData();
         const cleanedSecretary = {
-          ...form,
-          salary: form.salary ? parseFloat(String(form.salary)) : 0,
-          workload: form.workload ? parseInt(String(form.workload), 10) : 0,
+          ...sanitizedForm,
+          salary: sanitizedForm.salary ? parseFloat(String(sanitizedForm.salary)) : 0,
+          workload: sanitizedForm.workload ? parseInt(String(sanitizedForm.workload), 10) : 0,
         };
         formData.append("secretary", JSON.stringify(cleanedSecretary));
         if (photoFile) formData.append("profilePhoto", photoFile);
@@ -175,7 +184,17 @@ export default function SecretariasPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Tem certeza que deseja excluir esta secretária?")) return;
+    const result = await Swal.fire({
+      title: "Tem certeza?",
+      text: "Deseja realmente excluir esta secretária?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/secretary/${id}` });
       if (res?.status === 200 || res?.status === 204) { toast.success("Secretária excluída!"); loadSecretaries(); }
@@ -252,8 +271,8 @@ export default function SecretariasPage() {
               <input type="tel" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} className="gobarber-input" placeholder="(00) 00000-0000" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-              <input type="text" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} className="gobarber-input" placeholder="00000000000" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">CPF *</label>
+              <input type="text" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value.replace(/\D/g, "") })} className="gobarber-input" placeholder="00000000000" maxLength={11} required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Salário *</label>
@@ -294,7 +313,7 @@ export default function SecretariasPage() {
               <input type="text" placeholder="Bairro" value={form.address.neighborhood} onChange={(e) => setForm({ ...form, address: { ...form.address, neighborhood: e.target.value } })} className="gobarber-input" />
               <input type="text" placeholder="Cidade" value={form.address.city} onChange={(e) => setForm({ ...form, address: { ...form.address, city: e.target.value } })} className="gobarber-input" />
               <input type="text" placeholder="Estado" value={form.address.state} onChange={(e) => setForm({ ...form, address: { ...form.address, state: e.target.value } })} className="gobarber-input" />
-              <input type="text" placeholder="CEP" value={form.address.cep} onChange={(e) => setForm({ ...form, address: { ...form.address, cep: e.target.value } })} className="gobarber-input" />
+              <input type="text" placeholder="CEP" maxLength={9} value={form.address.cep} onChange={(e) => { const digits = e.target.value.replace(/\D/g, "").substring(0, 8); const fmt = digits.length > 5 ? digits.substring(0, 5) + "-" + digits.substring(5) : digits; setForm({ ...form, address: { ...form.address, cep: fmt } }); }} className="gobarber-input" />
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t">
@@ -334,10 +353,10 @@ export default function SecretariasPage() {
               {detailSecretary.admissionDate && (
                 <div className="bg-gray-50 p-3 rounded-lg"><p className="text-xs text-gray-500">Data Admissão</p><p className="font-medium">{detailSecretary.admissionDate}</p></div>
               )}
-              {detailSecretary.address && (
+              {detailSecretary.address && (detailSecretary.address.street || detailSecretary.address.city) && (
                 <div className="bg-gray-50 p-3 rounded-lg col-span-2">
                   <p className="text-xs text-gray-500">Endereço</p>
-                  <p className="font-medium">{detailSecretary.address.street || ""}{detailSecretary.address.city ? `, ${detailSecretary.address.city}` : ""}{detailSecretary.address.state ? ` - ${detailSecretary.address.state}` : ""}</p>
+                  <p className="font-medium">{[detailSecretary.address.street, detailSecretary.address.number ? `nº ${detailSecretary.address.number}` : null, detailSecretary.address.neighborhood, detailSecretary.address.city, detailSecretary.address.state, detailSecretary.address.cep].filter(Boolean).join(", ")}</p>
                 </div>
               )}
             </div>

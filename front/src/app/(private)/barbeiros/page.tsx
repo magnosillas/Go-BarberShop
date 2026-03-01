@@ -6,6 +6,8 @@ import React, { useEffect, useState } from "react";
 import { generica } from "@/api/api";
 import { toast } from "react-toastify";
 import { FaPlus, FaSearch, FaTrash, FaEdit, FaEye, FaCamera, FaUser, FaLink, FaUnlink } from "react-icons/fa";
+import { useRoles } from "@/hooks";
+import Swal from "sweetalert2";
 
 interface Barber {
   idBarber: number;
@@ -20,6 +22,7 @@ interface Barber {
   workload?: number;
   active?: boolean;
   services?: { id: number; name: string }[];
+  address?: { idAddress?: number; street?: string; number?: number; neighborhood?: string; city?: string; state?: string; cep?: string };
 }
 
 const initialForm = {
@@ -38,6 +41,7 @@ const initialForm = {
 };
 
 export default function BarbeirosPage() {
+  const { hasRole } = useRoles();
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -56,7 +60,7 @@ export default function BarbeirosPage() {
   useEffect(() => {
     loadBarbers();
     loadServices();
-    loadLoggedBarber();
+    if (hasRole("BARBER")) loadLoggedBarber();
   }, []);
 
   async function loadBarbers() {
@@ -99,11 +103,13 @@ export default function BarbeirosPage() {
   async function loadBarberPhoto(id: number) {
     try {
       const response = await generica({ metodo: "GET", uri: `/barber/${id}/profile-photo`, responseType: "blob" });
-      if (response?.data) {
-        const url = URL.createObjectURL(response.data);
+      if (response?.status === 200 && response?.data) {
+        const url = URL.createObjectURL(response.data instanceof Blob ? response.data : new Blob([response.data]));
         setBarberPhoto(url);
+      } else {
+        setBarberPhoto(null);
       }
-    } catch { /* sem foto */ }
+    } catch { setBarberPhoto(null); }
   }
 
   async function loadLoggedBarber() {
@@ -119,16 +125,18 @@ export default function BarbeirosPage() {
   async function loadLoggedBarberPicture() {
     try {
       const response = await generica({ metodo: "GET", uri: "/barber/logged-barber/picture", responseType: "blob" });
-      if (response?.data) {
-        const url = URL.createObjectURL(response.data);
+      if (response?.status === 200 && response?.data) {
+        const url = URL.createObjectURL(response.data instanceof Blob ? response.data : new Blob([response.data]));
         setLoggedBarberPic(url);
+      } else {
+        setLoggedBarberPic(null);
       }
-    } catch { /* sem foto */ }
+    } catch { setLoggedBarberPic(null); }
   }
 
   async function addServiceToBarber(barberId: number, serviceId: number) {
     try {
-      const response = await generica({ metodo: "POST", uri: "/barber/service", data: { idBarber: barberId, idService: serviceId } });
+      const response = await generica({ metodo: "POST", uri: "/barber/service", data: { idBarber: barberId, idServices: [serviceId] } });
       if (response?.status === 200 || response?.status === 201) {
         toast.success("Serviço adicionado ao barbeiro!");
         loadBarbers();
@@ -142,6 +150,17 @@ export default function BarbeirosPage() {
   }
 
   async function removeServiceFromBarber(barberId: number, serviceId: number) {
+    const result = await Swal.fire({
+      title: "Remover serviço?",
+      text: "Deseja remover este serviço do barbeiro?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, remover!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const response = await generica({ metodo: "POST", uri: "/barber/service/remove", params: { barber: barberId, service: serviceId } });
       if (response?.status === 200 || response?.status === 204) {
@@ -175,7 +194,14 @@ export default function BarbeirosPage() {
       salary: barber.salary || 0,
       admissionDate: barber.admissionDate || new Date().toISOString().split("T")[0],
       workload: barber.workload || 44,
-      address: { street: "", number: 0, neighborhood: "", city: "", state: "", cep: "" },
+      address: {
+        street: barber.address?.street || "",
+        number: barber.address?.number || 0,
+        neighborhood: barber.address?.neighborhood || "",
+        city: barber.address?.city || "",
+        state: barber.address?.state || "",
+        cep: barber.address?.cep || "",
+      },
       idServices: barber.services?.map((s) => s.id) || [],
     });
     setEditingId(barber.idBarber);
@@ -190,10 +216,15 @@ export default function BarbeirosPage() {
       return;
     }
     setSaving(true);
+    // Sanitize CEP: strip non-digits (DB column is varchar(8))
+    const cleanForm = {
+      ...form,
+      address: { ...form.address, cep: form.address.cep?.replace(/\D/g, "").substring(0, 8) || "" },
+    };
     try {
       if (editingId) {
         const formData = new FormData();
-        const barberBlob = new Blob([JSON.stringify(form)], { type: "application/json" });
+        const barberBlob = new Blob([JSON.stringify(cleanForm)], { type: "application/json" });
         formData.append("barber", barberBlob);
         if (photoFile) formData.append("profilePhoto", photoFile);
         const response = await generica({ metodo: "PUT", uri: `/barber/${editingId}`, data: formData });
@@ -208,12 +239,12 @@ export default function BarbeirosPage() {
         let response;
         if (photoFile) {
           const formData = new FormData();
-          const barberBlob = new Blob([JSON.stringify(form)], { type: "application/json" });
+          const barberBlob = new Blob([JSON.stringify(cleanForm)], { type: "application/json" });
           formData.append("barber", barberBlob);
           formData.append("profilePhoto", photoFile);
           response = await generica({ metodo: "POST", uri: "/barber", data: formData });
         } else {
-          response = await generica({ metodo: "POST", uri: "/barber/create-without-photo", data: form });
+          response = await generica({ metodo: "POST", uri: "/barber/create-without-photo", data: cleanForm });
         }
         if (response?.status === 200 || response?.status === 201) {
           toast.success("Barbeiro cadastrado!");
@@ -231,7 +262,17 @@ export default function BarbeirosPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Tem certeza que deseja excluir este barbeiro?")) return;
+    const result = await Swal.fire({
+      title: "Tem certeza?",
+      text: "Deseja realmente excluir este barbeiro?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const response = await generica({ metodo: "DELETE", uri: `/barber/${id}` });
       if (response?.status === 200 || response?.status === 204) {
@@ -355,7 +396,7 @@ export default function BarbeirosPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">CPF *</label>
-              <input type="text" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} className="gobarber-input" maxLength={11} required />
+              <input type="text" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value.replace(/\D/g, "") })} className="gobarber-input" maxLength={11} required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
@@ -401,7 +442,7 @@ export default function BarbeirosPage() {
               <input type="text" placeholder="Bairro" value={form.address.neighborhood} onChange={(e) => setForm({ ...form, address: { ...form.address, neighborhood: e.target.value } })} className="gobarber-input" />
               <input type="text" placeholder="Cidade" value={form.address.city} onChange={(e) => setForm({ ...form, address: { ...form.address, city: e.target.value } })} className="gobarber-input" />
               <input type="text" placeholder="Estado (UF)" maxLength={2} value={form.address.state} onChange={(e) => setForm({ ...form, address: { ...form.address, state: e.target.value.toUpperCase() } })} className="gobarber-input" />
-              <input type="text" placeholder="CEP" maxLength={8} value={form.address.cep} onChange={(e) => setForm({ ...form, address: { ...form.address, cep: e.target.value } })} className="gobarber-input" />
+              <input type="text" placeholder="CEP" maxLength={9} value={form.address.cep} onChange={(e) => { const digits = e.target.value.replace(/\D/g, "").substring(0, 8); const fmt = digits.length > 5 ? digits.substring(0, 5) + "-" + digits.substring(5) : digits; setForm({ ...form, address: { ...form.address, cep: fmt } }); }} className="gobarber-input" />
             </div>
           </fieldset>
 
@@ -478,6 +519,14 @@ export default function BarbeirosPage() {
               <p><strong>Admissão:</strong> {detailModal.admissionDate || "—"}</p>
               <p><strong>Carga Horária:</strong> {detailModal.workload || "—"}h/sem</p>
             </div>
+            {detailModal.address && (detailModal.address.street || detailModal.address.city) && (
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-gray-500 mb-1">Endereço</p>
+                <p className="font-medium text-sm">
+                  {[detailModal.address.street, detailModal.address.number ? `nº ${detailModal.address.number}` : null, detailModal.address.neighborhood, detailModal.address.city, detailModal.address.state, detailModal.address.cep].filter(Boolean).join(", ")}
+                </p>
+              </div>
+            )}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <strong className="text-sm">Serviços vinculados:</strong>
