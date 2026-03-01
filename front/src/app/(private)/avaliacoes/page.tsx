@@ -256,7 +256,8 @@ export default function AvaliacoesPage() {
     if (!reviewForm.barberId) { toast.error("Selecione um barbeiro"); return; }
     setSavingReview(true);
     try {
-      const body = { ...reviewForm, clientId: userId ? Number(userId) : 0 };
+      if (!userId) { toast.error("Usuário não identificado. Faça login novamente."); setSavingReview(false); return; }
+      const body = { ...reviewForm, clientId: Number(userId) };
       const res = await generica({ metodo: "POST", uri: "/review", data: body });
       if (res?.status === 200 || res?.status === 201) {
         toast.success("Avaliação enviada!");

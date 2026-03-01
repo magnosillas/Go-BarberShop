@@ -16,6 +16,7 @@ import {
   FaEye,
   FaInfoCircle,
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface Product {
   id: number;
@@ -24,7 +25,7 @@ interface Product {
   brand?: string;
   price?: number;
   size?: string;
-  quantity?: number;
+  quantity?: number; // computed from stock entries
 }
 
 interface StockEntry {
@@ -80,7 +81,27 @@ export default function ProdutosPage() {
         params: { page: 0, size: 100 },
       });
       const data = response?.data?.content || response?.data || [];
-      setProducts(Array.isArray(data) ? data : []);
+      const prods: Product[] = Array.isArray(data) ? data : [];
+
+      // Fetch stock totals for each product in parallel
+      const withStock = await Promise.all(
+        prods.map(async (p) => {
+          try {
+            const sRes = await generica({
+              metodo: "GET",
+              uri: `/stock/product/${p.id}`,
+              params: { page: 0, size: 100 },
+            });
+            const stockData = sRes?.data?.content || sRes?.data || [];
+            const entries = Array.isArray(stockData) ? stockData : [];
+            const totalQty = entries.reduce((sum: number, e: any) => sum + (e.quantity || 0), 0);
+            return { ...p, quantity: totalQty };
+          } catch {
+            return { ...p, quantity: 0 };
+          }
+        })
+      );
+      setProducts(withStock);
     } catch {
       toast.error("Erro ao carregar produtos");
     } finally {
@@ -105,13 +126,22 @@ export default function ProdutosPage() {
     }
   }
 
-  // GET /product/{id} — fetch single product detail
+  // GET /product/{id} — fetch single product detail (enriched with stock qty)
   async function viewProductDetail(id: number) {
     setLoadingDetail(true);
     setDetailProduct(null);
     try {
-      const res = await generica({ metodo: "GET", uri: `/product/${id}` });
-      setDetailProduct(res?.data || null);
+      const [prodRes, stockRes] = await Promise.all([
+        generica({ metodo: "GET", uri: `/product/${id}` }),
+        generica({ metodo: "GET", uri: `/stock/product/${id}`, params: { page: 0, size: 100 } }).catch(() => null),
+      ]);
+      const prod = prodRes?.data || null;
+      if (prod) {
+        const stockData = stockRes?.data?.content || stockRes?.data || [];
+        const entries = Array.isArray(stockData) ? stockData : [];
+        const totalQty = entries.reduce((sum: number, e: any) => sum + (e.quantity || 0), 0);
+        setDetailProduct({ ...prod, quantity: totalQty });
+      }
     } catch {
       toast.error("Erro ao carregar detalhe do produto");
     } finally {
@@ -199,7 +229,17 @@ export default function ProdutosPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+    const result = await Swal.fire({
+      title: "Tem certeza?",
+      text: "Deseja realmente excluir este produto?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/product/${id}` });
       if (res?.status === 200 || res?.status === 204) {
@@ -272,7 +312,17 @@ export default function ProdutosPage() {
   }
 
   async function handleStockDelete(id: number, productId: number) {
-    if (!confirm("Excluir esta entrada de estoque?")) return;
+    const result = await Swal.fire({
+      title: "Excluir estoque?",
+      text: "Deseja remover esta entrada de estoque?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       await generica({ metodo: "DELETE", uri: `/stock/${id}` });
       toast.success("Entrada removida!");

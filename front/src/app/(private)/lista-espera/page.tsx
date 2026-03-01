@@ -22,13 +22,14 @@ import {
   FaFilter,
   FaBroom,
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface WaitItem {
-  id: number;
+  idWaitList: number;
   clientName?: string;
-  client?: { id?: number; name?: string };
+  client?: { idClient?: number; name?: string };
   barberName?: string;
-  barber?: { id?: number; name?: string };
+  barber?: { idBarber?: number; name?: string };
   serviceName?: string;
   service?: { id?: number; name?: string };
   status?: string;
@@ -36,8 +37,24 @@ interface WaitItem {
   priority?: string;
   notes?: string;
   preferredDate?: string;
+  desiredTime?: string;
+  desiredDuration?: number;
   createdAt?: string;
+  updatedAt?: string;
   estimatedTime?: string;
+  notified?: boolean;
+  notifiedAt?: string;
+  expirationTime?: string;
+}
+
+const priorityLabel: Record<string, string> = { LOW: "Baixa", NORMAL: "Normal", HIGH: "Alta", URGENT: "Urgente" };
+
+function formatDateTime(iso?: string): string {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  } catch { return iso; }
 }
 
 interface Barber { idBarber: number; name?: string; }
@@ -105,11 +122,13 @@ export default function ListaEsperaPage() {
     if (!form.clientId) { toast.error("Selecione um cliente"); return; }
     setSaving(true);
     try {
+      // Map string priorities to integers the backend expects
+      const priorityMap: Record<string, number> = { LOW: 1, NORMAL: 0, HIGH: 2, URGENT: 3 };
       const params: Record<string, string | number> = { clientId: parseInt(form.clientId) };
       if (form.barberId) params.barberId = parseInt(form.barberId);
       if (form.serviceId) params.serviceId = parseInt(form.serviceId);
       if (form.preferredDate) params.preferredDate = form.preferredDate;
-      if (form.priority) params.priority = form.priority;
+      if (form.priority) params.priority = priorityMap[form.priority] ?? 0;
       if (form.notes) params.notes = form.notes;
 
       const res = await generica({ metodo: "POST", uri: "/waitlist", params });
@@ -120,7 +139,17 @@ export default function ListaEsperaPage() {
   }
 
   async function handleRemove(id: number) {
-    if (!confirm("Remover da lista de espera?")) return;
+    const result = await Swal.fire({
+      title: "Remover da lista?",
+      text: "Deseja remover este item da lista de espera?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, remover!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/waitlist/${id}` });
       if (res?.status === 200 || res?.status === 204) { toast.success("Removido da lista!"); loadWaitList(); }
@@ -180,7 +209,17 @@ export default function ListaEsperaPage() {
   }
 
   async function handleConvert(id: number) {
-    if (!confirm("Converter para agendamento?")) return;
+    const result = await Swal.fire({
+      title: "Converter para agendamento?",
+      text: "Este item será convertido em um agendamento.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, converter!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "POST", uri: `/waitlist/${id}/convert` });
       if (res?.status === 200 || res?.status === 201) { toast.success("Convertido para agendamento!"); loadWaitList(); }
@@ -189,8 +228,9 @@ export default function ListaEsperaPage() {
   }
 
   async function handleUpdatePriority(id: number, priority: string) {
+    const priorityMap: Record<string, number> = { LOW: 1, NORMAL: 0, HIGH: 2, URGENT: 3 };
     try {
-      const res = await generica({ metodo: "PUT", uri: `/waitlist/${id}/priority`, params: { priority } });
+      const res = await generica({ metodo: "PUT", uri: `/waitlist/${id}/priority`, params: { priority: priorityMap[priority] ?? 0 } });
       if (res?.status === 200) { toast.success("Prioridade atualizada!"); loadWaitList(); }
       else toast.error("Erro ao atualizar prioridade");
     } catch { toast.error("Erro ao atualizar prioridade"); }
@@ -254,12 +294,27 @@ export default function ListaEsperaPage() {
           <div className="gobarber-card bg-gradient-to-r from-[#1A1A2E]/5 to-[#E94560]/5 p-4">
             <h3 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2"><FaChartBar /> Estatísticas</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-              {Object.entries(stats).slice(0, 8).map(([key, val]) => (
-                <div key={key}>
-                  <p className="text-lg font-bold text-[#1A1A2E]">{typeof val === 'number' ? val : String(val)}</p>
-                  <p className="text-xs text-gray-500">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+              <div>
+                <p className="text-lg font-bold text-[#1A1A2E]">{stats.totalWaiting ?? 0}</p>
+                <p className="text-xs text-gray-500">Total Aguardando</p>
+              </div>
+              {Array.isArray(stats.byBarber) && stats.byBarber.length > 0 ? (
+                stats.byBarber.map((entry: any) => {
+                  const barberName = Array.isArray(entry) ? entry[1] : entry.barberName || "Barbeiro";
+                  const count = Array.isArray(entry) ? entry[2] : entry.count || 0;
+                  return (
+                    <div key={Array.isArray(entry) ? entry[0] : barberName}>
+                      <p className="text-lg font-bold text-[#1A1A2E]">{count}</p>
+                      <p className="text-xs text-gray-500">{barberName}</p>
+                    </div>
+                  );
+                })
+              ) : (
+                <div>
+                  <p className="text-lg font-bold text-gray-300">0</p>
+                  <p className="text-xs text-gray-500">Por Barbeiro</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
@@ -337,7 +392,7 @@ export default function ListaEsperaPage() {
             items.map((item, idx) => {
               const st = getStatusStyle(item.status);
               return (
-                <div key={item.id} className="gobarber-card flex items-center gap-4 hover:border-[#E94560]/30 relative">
+                <div key={item.idWaitList} className="gobarber-card flex items-center gap-4 hover:border-[#E94560]/30 relative">
                   <div className="w-10 h-10 rounded-full bg-[#1A1A2E] text-white flex items-center justify-center font-bold text-sm">
                     {item.position ?? idx + 1}
                   </div>
@@ -347,20 +402,21 @@ export default function ListaEsperaPage() {
                       <span className="font-medium text-[#1A1A2E] truncate">{item.clientName || item.client?.name || "Cliente"}</span>
                     </div>
                     <p className="text-sm text-gray-500">
-                      {item.serviceName || item.service?.name || "—"} • {item.barberName || item.barber?.name || "Qualquer barbeiro"}
+                      <FaCut className="inline text-xs mr-1" />{item.barberName || item.barber?.name || "Qualquer barbeiro"}
+                      {(item.desiredTime || item.preferredDate) && <span className="ml-2 text-gray-400">• {formatDateTime(item.desiredTime || item.preferredDate)}</span>}
                     </p>
                   </div>
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${st.bg} ${st.text}`}>
                     {st.icon} {st.label}
                   </span>
-                  <button onClick={() => viewDetail(item.id)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Detalhes"><FaEye /></button>
+                  <button onClick={() => viewDetail(item.idWaitList)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Detalhes"><FaEye /></button>
                   {item.status?.toUpperCase() === "WAITING" && (
                     <>
-                      <button onClick={() => handleNotify(item.id)} className="p-1.5 text-purple-600 hover:bg-purple-50 rounded" title="Notificar cliente"><FaBell /></button>
-                      <button onClick={() => handleConvert(item.id)} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Converter em agendamento"><FaExchangeAlt /></button>
+                      <button onClick={() => handleNotify(item.idWaitList)} className="p-1.5 text-purple-600 hover:bg-purple-50 rounded" title="Notificar cliente"><FaBell /></button>
+                      <button onClick={() => handleConvert(item.idWaitList)} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Converter em agendamento"><FaExchangeAlt /></button>
                       <select
                         value={item.priority || "NORMAL"}
-                        onChange={(e) => handleUpdatePriority(item.id, e.target.value)}
+                        onChange={(e) => handleUpdatePriority(item.idWaitList, e.target.value)}
                         className="text-xs border rounded px-1 py-0.5"
                         title="Prioridade"
                       >
@@ -369,17 +425,17 @@ export default function ListaEsperaPage() {
                         <option value="HIGH">Alta</option>
                         <option value="URGENT">Urgente</option>
                       </select>
-                      <button onClick={() => { setEditNotesId(item.id); setEditNotesText(item.notes || ""); }} className="p-1.5 text-gray-600 hover:bg-gray-50 rounded" title="Editar observações"><FaStickyNote /></button>
+                      <button onClick={() => { setEditNotesId(item.idWaitList); setEditNotesText(item.notes || ""); }} className="p-1.5 text-gray-600 hover:bg-gray-50 rounded" title="Editar observações"><FaStickyNote /></button>
                     </>
                   )}
-                  <button onClick={() => handleRemove(item.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Remover">
+                  <button onClick={() => handleRemove(item.idWaitList)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Remover">
                     <FaTrash />
                   </button>
-                  {editNotesId === item.id && (
+                  {editNotesId === item.idWaitList && (
                     <div className="absolute right-0 top-full mt-1 bg-white border rounded-lg shadow-lg p-3 z-10 w-64">
                       <textarea value={editNotesText} onChange={(e) => setEditNotesText(e.target.value)} className="gobarber-input text-sm" rows={2} placeholder="Observações..." />
                       <div className="flex gap-2 mt-2">
-                        <button onClick={() => handleUpdateNotes(item.id)} className="text-xs bg-[#1A1A2E] text-white px-3 py-1 rounded">Salvar</button>
+                        <button onClick={() => handleUpdateNotes(item.idWaitList)} className="text-xs bg-[#1A1A2E] text-white px-3 py-1 rounded">Salvar</button>
                         <button onClick={() => setEditNotesId(null)} className="text-xs bg-gray-100 px-3 py-1 rounded">Cancelar</button>
                       </div>
                     </div>
@@ -397,20 +453,21 @@ export default function ListaEsperaPage() {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div><span className="text-xs text-gray-500">Cliente</span><p className="font-medium">{detailModal.clientName || detailModal.client?.name || "—"}</p></div>
-              <div><span className="text-xs text-gray-500">Barbeiro</span><p className="font-medium">{detailModal.barberName || detailModal.barber?.name || "Qualquer"}</p></div>
-              <div><span className="text-xs text-gray-500">Serviço</span><p className="font-medium">{detailModal.serviceName || detailModal.service?.name || "—"}</p></div>
+              <div><span className="text-xs text-gray-500">Barbeiro</span><p className="font-medium">{detailModal.barberName || detailModal.barber?.name || "Qualquer barbeiro"}</p></div>
               <div><span className="text-xs text-gray-500">Status</span><p>{(() => { const s = getStatusStyle(detailModal.status); return <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${s.bg} ${s.text}`}>{s.icon} {s.label}</span>; })()}</p></div>
               <div><span className="text-xs text-gray-500">Posição</span><p className="font-medium">#{detailModal.position || "—"}</p></div>
-              <div><span className="text-xs text-gray-500">Prioridade</span><p className="font-medium">{detailModal.priority || "NORMAL"}</p></div>
-              {detailModal.preferredDate && <div><span className="text-xs text-gray-500">Data Preferida</span><p className="font-medium">{detailModal.preferredDate}</p></div>}
-              {detailModal.estimatedTime && <div><span className="text-xs text-gray-500">Tempo Estimado</span><p className="font-medium">{detailModal.estimatedTime}</p></div>}
-              {detailModal.createdAt && <div><span className="text-xs text-gray-500">Criado em</span><p className="font-medium">{detailModal.createdAt}</p></div>}
+              <div><span className="text-xs text-gray-500">Prioridade</span><p className="font-medium">{priorityLabel[detailModal.priority || "NORMAL"] || detailModal.priority}</p></div>
+              {detailModal.desiredDuration && <div><span className="text-xs text-gray-500">Duração Estimada</span><p className="font-medium">{detailModal.desiredDuration} min</p></div>}
+              {(detailModal.preferredDate || detailModal.desiredTime) && <div><span className="text-xs text-gray-500">Data Preferida</span><p className="font-medium">{formatDateTime(detailModal.preferredDate || detailModal.desiredTime)}</p></div>}
+              {detailModal.createdAt && <div><span className="text-xs text-gray-500">Criado em</span><p className="font-medium">{formatDateTime(detailModal.createdAt)}</p></div>}
+              {detailModal.notifiedAt && <div><span className="text-xs text-gray-500">Notificado em</span><p className="font-medium">{formatDateTime(detailModal.notifiedAt)}</p></div>}
+              {detailModal.expirationTime && <div><span className="text-xs text-gray-500">Expira em</span><p className="font-medium">{formatDateTime(detailModal.expirationTime)}</p></div>}
             </div>
             {detailModal.notes && <div><span className="text-xs text-gray-500">Observações</span><p className="text-sm bg-gray-50 rounded p-2 mt-1">{detailModal.notes}</p></div>}
             {detailModal.status?.toUpperCase() === "WAITING" && (
               <div className="flex gap-3 pt-3 border-t">
-                <button onClick={() => { handleNotify(detailModal.id); setDetailModal(null); }} className="flex-1 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium flex items-center justify-center gap-2"><FaBell /> Notificar</button>
-                <button onClick={() => { handleConvert(detailModal.id); setDetailModal(null); }} className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium flex items-center justify-center gap-2"><FaExchangeAlt /> Converter</button>
+                <button onClick={() => { handleNotify(detailModal.idWaitList); setDetailModal(null); }} className="flex-1 px-3 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium flex items-center justify-center gap-2"><FaBell /> Notificar</button>
+                <button onClick={() => { handleConvert(detailModal.idWaitList); setDetailModal(null); }} className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium flex items-center justify-center gap-2"><FaExchangeAlt /> Converter</button>
               </div>
             )}
           </div>

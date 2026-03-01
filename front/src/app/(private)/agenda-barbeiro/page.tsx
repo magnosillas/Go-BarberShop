@@ -19,6 +19,7 @@ import {
   FaSearch,
   FaCalendarDay,
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface Barber {
   idBarber: number;
@@ -107,7 +108,7 @@ export default function AgendaBarbeiroPage() {
       const data = res?.data?.content || res?.data || [];
       const list = Array.isArray(data) ? data : [];
       setBarbers(list);
-      if (list.length > 0 && !selectedBarber) setSelectedBarber(list[0].id);
+      if (list.length > 0 && !selectedBarber) setSelectedBarber(list[0].idBarber);
     } catch { toast.error("Erro ao carregar barbeiros"); }
   }
 
@@ -192,7 +193,17 @@ export default function AgendaBarbeiroPage() {
   }
 
   async function deactivateSchedule(id: number) {
-    if (!confirm("Desativar este bloqueio?")) return;
+    const result = await Swal.fire({
+      title: "Desativar bloqueio?",
+      text: "Deseja desativar este bloqueio?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, desativar!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "POST", uri: `/barber-schedule/${id}/deactivate` });
       if (res?.status === 200) {
@@ -276,7 +287,17 @@ export default function AgendaBarbeiroPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Excluir este bloqueio?")) return;
+    const result = await Swal.fire({
+      title: "Excluir bloqueio?",
+      text: "Deseja realmente excluir este bloqueio?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       await generica({ metodo: "DELETE", uri: `/barber-schedule/${id}` });
       toast.success("Bloqueio removido");

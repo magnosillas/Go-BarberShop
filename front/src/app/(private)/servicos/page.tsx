@@ -6,14 +6,26 @@ import React, { useEffect, useState } from "react";
 import { generica } from "@/api/api";
 import { toast } from "react-toastify";
 import { FaPlus, FaTrash, FaEdit, FaEye } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface Service {
   id: number;
   name?: string;
   description?: string;
   value?: number;
-  time?: number;
+  time?: number | string;
   active?: boolean;
+}
+
+/** Convert API time (may be "HH:mm:ss" string or minutes number) to minutes */
+function parseTimeToMinutes(t: any): number {
+  if (t == null) return 0;
+  if (typeof t === "number") return t;
+  if (typeof t === "string" && t.includes(":")) {
+    const parts = t.split(":");
+    return (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0);
+  }
+  return parseInt(t, 10) || 0;
 }
 
 const initialForm = { name: "", description: "", value: 0, time: 30 };
@@ -52,7 +64,7 @@ export default function ServicosPage() {
   function openCreate() { setForm(initialForm); setEditingId(null); setModalOpen(true); }
 
   function openEdit(s: Service) {
-    setForm({ name: s.name || "", description: s.description || "", value: s.value || 0, time: s.time || 30 });
+    setForm({ name: s.name || "", description: s.description || "", value: s.value || 0, time: parseTimeToMinutes(s.time) || 30 });
     setEditingId(s.id);
     setModalOpen(true);
   }
@@ -76,7 +88,17 @@ export default function ServicosPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Tem certeza que deseja excluir este serviço?")) return;
+    const result = await Swal.fire({
+      title: "Tem certeza?",
+      text: "Deseja realmente excluir este serviço?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/services/${id}` });
       if (res?.status === 200 || res?.status === 204) { toast.success("Serviço excluído!"); loadServices(); }
@@ -118,7 +140,7 @@ export default function ServicosPage() {
                 <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                   <div className="flex gap-4">
                     <span className="text-lg font-bold text-[#E94560]">R$ {service.value?.toFixed(2) || "0.00"}</span>
-                    {service.time && <span className="text-sm text-gray-500 flex items-center">🕒 {service.time} min</span>}
+                    {service.time && <span className="text-sm text-gray-500 flex items-center">🕒 {parseTimeToMinutes(service.time)} min</span>}
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => viewServiceDetail(service.id)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Detalhes"><FaEye /></button>
@@ -182,7 +204,7 @@ export default function ServicosPage() {
               </div>
               <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-xs text-gray-500">Duração</p>
-                <p className="text-lg font-bold text-[#1A1A2E]">{detailService.time || 0} min</p>
+                <p className="text-lg font-bold text-[#1A1A2E]">{parseTimeToMinutes(detailService.time)} min</p>
               </div>
             </div>
           </div>

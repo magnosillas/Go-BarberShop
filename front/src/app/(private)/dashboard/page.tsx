@@ -36,6 +36,7 @@ interface DashboardData {
   totalBarbers?: number;
   revenueGrowth?: number;
   appointmentsToday?: number;
+  averageTicket?: number;
 }
 
 interface KPIData {
@@ -81,6 +82,10 @@ interface BarberStatus {
   currentClient?: string;
   nextAppointment?: string;
   appointmentsToday?: number;
+  /* real API fields from /dashboard/barbers-status */
+  id?: number;
+  name?: string;
+  active?: boolean;
 }
 
 /**
@@ -173,7 +178,7 @@ export default function DashboardPage() {
           if (kpiRes?.data) setKpis(kpiRes.data);
 
           const barbData = barbersRes?.data || [];
-          setBarberStatuses(Array.isArray(barbData) ? barbData : []);
+          setBarberStatuses((Array.isArray(barbData) ? barbData : []).map((b: any) => ({ ...b, barberId: b.barberId ?? b.id, barberName: b.barberName ?? b.name, status: b.status ?? (b.active === true ? 'AVAILABLE' : b.active === false ? 'INACTIVE' : undefined) })));
         } else {
           // Admin/Secretária: carregar tudo
           const [dashRes, appRes, pendRes, todayRes, kpiRes, barbersRes] = await Promise.all([
@@ -199,7 +204,7 @@ export default function DashboardPage() {
           if (kpiRes?.data) setKpis(kpiRes.data);
 
           const barbData = barbersRes?.data || [];
-          setBarberStatuses(Array.isArray(barbData) ? barbData : []);
+          setBarberStatuses((Array.isArray(barbData) ? barbData : []).map((b: any) => ({ ...b, barberId: b.barberId ?? b.id, barberName: b.barberName ?? b.name, status: b.status ?? (b.active === true ? 'AVAILABLE' : b.active === false ? 'INACTIVE' : undefined) })));
         }
       } catch (err) {
         console.error("Erro ao carregar dashboard:", err);
@@ -225,26 +230,94 @@ export default function DashboardPage() {
     if (!customStart || !customEnd) { toast.error("Informe as datas"); return; }
     setReportLoading(true);
     try {
-      const res = await generica({ metodo: "GET", uri: "/dashboard", params: { startDate: customStart, endDate: customEnd } });
+      const res = await generica({ metodo: "GET", uri: "/dashboard", params: { startDate: `${customStart}T00:00:00`, endDate: `${customEnd}T23:59:59` } });
       if (res?.data) setReportData(res.data);
     } catch { toast.error("Erro ao carregar relatório"); }
     finally { setReportLoading(false); }
   }
 
+  function getReportDateParams() {
+    const now = new Date();
+    const end = now.toISOString().split("T")[0] + "T23:59:59";
+    let start: string;
+    switch (reportPeriod) {
+      case "today":  start = now.toISOString().split("T")[0] + "T00:00:00"; break;
+      case "week":   { const d = new Date(now); d.setDate(d.getDate() - 7); start = d.toISOString().split("T")[0] + "T00:00:00"; break; }
+      case "year":   start = `${now.getFullYear()}-01-01T00:00:00`; break;
+      default:       start = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01T00:00:00`;
+    }
+    if (customStart && customEnd) {
+      start = `${customStart}T00:00:00`;
+      return { startDate: start, endDate: `${customEnd}T23:59:59` };
+    }
+    return { startDate: start, endDate: end };
+  }
+
   async function loadFinancial() {
-    try { const res = await generica({ metodo: "GET", uri: "/dashboard/financial" }); if (res?.data) setFinancialData(res.data); } catch { /* */ }
+    try { const p = getReportDateParams(); const res = await generica({ metodo: "GET", uri: "/dashboard/financial", params: p }); if (res?.data) setFinancialData(res.data); } catch { /* */ }
   }
 
   async function loadClientsReport() {
-    try { const res = await generica({ metodo: "GET", uri: "/dashboard/clients" }); if (res?.data) setClientsReport(res.data); } catch { /* */ }
+    try {
+      const p = getReportDateParams();
+      const res = await generica({ metodo: "GET", uri: "/dashboard/clients", params: p });
+      if (res?.data) {
+        const raw = res.data;
+        // Filter out object/array values to keep only scalar report metrics
+        if (typeof raw === 'object' && !Array.isArray(raw)) {
+          const safe: Record<string, any> = {};
+          for (const [k, v] of Object.entries(raw)) {
+            if (v === null || typeof v !== 'object') safe[k] = v;
+            else if (Array.isArray(v)) safe[k + 'Count'] = v.length;
+          }
+          setClientsReport(safe);
+        } else {
+          setClientsReport(raw);
+        }
+      }
+    } catch { /* */ }
   }
 
   async function loadBarbersReport() {
-    try { const res = await generica({ metodo: "GET", uri: "/dashboard/barbers" }); if (res?.data) setBarbersReport(res.data); } catch { /* */ }
+    try {
+      const p = getReportDateParams();
+      const res = await generica({ metodo: "GET", uri: "/dashboard/barbers", params: p });
+      if (res?.data) {
+        // API returns { barbers: [raw entities] } — extract flat list
+        const raw = res.data;
+        if (raw.barbers && Array.isArray(raw.barbers)) {
+          const flat = raw.barbers.map((b: any) => ({
+            name: b.name || 'Sem nome',
+            idBarber: b.idBarber,
+            contato: b.contato || '—',
+            active: b.active !== false ? 'Ativo' : 'Inativo',
+          }));
+          setBarbersReport(flat);
+        } else {
+          setBarbersReport(raw);
+        }
+      }
+    } catch { /* */ }
   }
 
   async function loadServicesReport() {
-    try { const res = await generica({ metodo: "GET", uri: "/dashboard/services-report" }); if (res?.data) setServicesReport(res.data); } catch { /* */ }
+    try {
+      const p = getReportDateParams();
+      const res = await generica({ metodo: "GET", uri: "/dashboard/services-report", params: p });
+      if (res?.data) {
+        const raw = res.data;
+        if (raw.services && Array.isArray(raw.services)) {
+          const flat = raw.services.map((s: any) => ({
+            name: s.name || s.name_service || 'Sem nome',
+            value: s.value ?? s.price_service ?? 0,
+            count: s.count ?? 0,
+          }));
+          setServicesReport(flat);
+        } else {
+          setServicesReport(raw);
+        }
+      }
+    } catch { /* */ }
   }
 
   async function loadRevenueRealtime() {
@@ -265,8 +338,28 @@ export default function DashboardPage() {
   }
 
   async function loadCompare() {
+    if (!customStart || !customEnd) {
+      toast.error("Informe as datas de início e fim para comparar");
+      return;
+    }
     try {
-      const res = await generica({ metodo: "GET", uri: "/dashboard/compare", params: { startDate: customStart || undefined, endDate: customEnd || undefined } });
+      // O backend espera 4 períodos: período selecionado vs período anterior de mesma duração
+      const start = new Date(customStart);
+      const end = new Date(customEnd);
+      const diffMs = end.getTime() - start.getTime();
+      const prevEnd = new Date(start.getTime() - 86400000); // dia anterior ao início
+      const prevStart = new Date(prevEnd.getTime() - diffMs);
+      const fmt = (d: Date) => d.toISOString().split("T")[0];
+      const res = await generica({
+        metodo: "GET",
+        uri: "/dashboard/compare",
+        params: {
+          period1Start: `${fmt(prevStart)}T00:00:00`,
+          period1End: `${fmt(prevEnd)}T23:59:59`,
+          period2Start: `${customStart}T00:00:00`,
+          period2End: `${customEnd}T23:59:59`,
+        },
+      });
       if (res?.data) setReportData(res.data);
     } catch { /* */ }
   }
@@ -355,7 +448,8 @@ export default function DashboardPage() {
         toast.success("Agendamento aprovado!");
         setPendingAppointments((prev) => prev.filter((a) => (a.id || a.idAppointment) !== id));
       } else {
-        toast.error("Erro ao aprovar");
+        const msg = res?.data?.message || res?.data?.error || "Erro ao aprovar";
+        toast.error(msg);
       }
     } catch {
       toast.error("Erro ao aprovar agendamento");
@@ -373,7 +467,8 @@ export default function DashboardPage() {
         toast.success("Agendamento rejeitado.");
         setPendingAppointments((prev) => prev.filter((a) => (a.id || a.idAppointment) !== id));
       } else {
-        toast.error("Erro ao rejeitar");
+        const msg = res?.data?.message || res?.data?.error || "Erro ao rejeitar";
+        toast.error(msg);
       }
     } catch {
       toast.error("Erro ao rejeitar agendamento");
@@ -388,9 +483,9 @@ export default function DashboardPage() {
     },
     { title: "Agendamentos Hoje", value: data.appointmentsToday ?? todayAppointments.length ?? "—", icon: <FaCalendarCheck />, color: "bg-blue-500" },
     { title: "Total de Clientes", value: data.totalClients ?? "—", icon: <FaUsers />, color: "bg-purple-500" },
-    { title: "Barbeiros Ativos", value: data.totalBarbers ?? "—", icon: <FaCut />, color: "bg-orange-500" },
+    { title: "Barbeiros Ativos", value: data.totalBarbers ?? (barberStatuses.filter(b => b.active !== false && b.status !== 'INACTIVE').length || "—"), icon: <FaCut />, color: "bg-orange-500" },
     { title: "Pendentes", value: pendingAppointments.length, icon: <FaHourglassHalf />, color: pendingAppointments.length > 0 ? "bg-yellow-500" : "bg-gray-400" },
-    { title: "Ticket Médio", value: kpis.avgTicket != null ? `R$ ${kpis.avgTicket.toFixed(2)}` : "—", icon: <FaChartLine />, color: "bg-teal-500" },
+    { title: "Ticket Médio", value: (kpis as any).avgTicket != null ? `R$ ${(kpis as any).avgTicket.toFixed(2)}` : data.averageTicket != null ? `R$ ${data.averageTicket.toFixed(2)}` : "—", icon: <FaChartLine />, color: "bg-teal-500" },
   ];
 
   return (
@@ -680,12 +775,13 @@ export default function DashboardPage() {
                         <p className="font-semibold text-[#1A1A2E] text-sm">{bs.barberName || "Barbeiro"}</p>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
                           bs.status === "AVAILABLE" ? "bg-green-100 text-green-700" :
-                          bs.status === "BUSY" ? "bg-red-100 text-red-700" :
+                          bs.status === "BUSY" || bs.status === "INACTIVE" ? "bg-red-100 text-red-700" :
                           "bg-gray-100 text-gray-600"
                         }`}>
                           {bs.status === "AVAILABLE" ? "Disponível" :
+                           bs.status === "INACTIVE" ? "Inativo" :
                            bs.status === "BUSY" ? "Ocupado" :
-                           bs.status || "—"}
+                           "—"}
                         </span>
                       </div>
                     </div>
@@ -739,7 +835,7 @@ export default function DashboardPage() {
               <div className="gobarber-card">
                 <h3 className="text-lg font-semibold text-[#1A1A2E] mb-3 flex items-center gap-2"><FaFileAlt /> Resumo do Período</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {Object.entries(reportData).slice(0, 12).map(([key, val]) => (
+                  {Object.entries(reportData).filter(([, v]) => v === null || typeof v !== 'object').slice(0, 12).map(([key, val]) => (
                     <div key={key} className="text-center p-3 bg-gray-50 rounded-lg">
                       <p className="text-lg font-bold text-[#1A1A2E]">{typeof val === 'number' ? (key.toLowerCase().includes('revenue') || key.toLowerCase().includes('receita') ? `R$ ${val.toFixed(2)}` : val) : String(val ?? '—')}</p>
                       <p className="text-xs text-gray-500 mt-1">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
@@ -754,7 +850,7 @@ export default function DashboardPage() {
               <div className="gobarber-card bg-gradient-to-r from-green-50 to-teal-50">
                 <h3 className="text-base font-semibold text-green-800 mb-2 flex items-center gap-2"><FaSyncAlt /> Receita em Tempo Real</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {Object.entries(revenueRealtime).slice(0, 8).map(([key, val]) => (
+                  {Object.entries(revenueRealtime).filter(([, v]) => v === null || typeof v !== 'object').slice(0, 8).map(([key, val]) => (
                     <div key={key} className="text-center">
                       <p className="text-lg font-bold text-green-700">{typeof val === 'number' ? `R$ ${val.toFixed(2)}` : String(val ?? '—')}</p>
                       <p className="text-xs text-gray-500">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
@@ -770,7 +866,7 @@ export default function DashboardPage() {
                 <div className="gobarber-card">
                   <h3 className="text-base font-semibold text-[#1A1A2E] mb-3 flex items-center gap-2"><FaDollarSign /> Financeiro</h3>
                   <div className="space-y-2">
-                    {Object.entries(financialData).slice(0, 10).map(([k, v]) => (
+                    {Object.entries(financialData).filter(([, val]) => val === null || typeof val !== 'object').slice(0, 10).map(([k, v]) => (
                       <div key={k} className="flex justify-between items-center py-1 border-b border-gray-100">
                         <span className="text-sm text-gray-600">{k.replace(/([A-Z])/g, ' $1').trim()}</span>
                         <span className="text-sm font-semibold text-[#1A1A2E]">{typeof v === 'number' ? (k.toLowerCase().includes('count') || k.toLowerCase().includes('total') && !k.toLowerCase().includes('revenue') ? v : `R$ ${v.toFixed(2)}`) : String(v ?? '—')}</span>
@@ -783,7 +879,7 @@ export default function DashboardPage() {
                 <div className="gobarber-card">
                   <h3 className="text-base font-semibold text-[#1A1A2E] mb-3 flex items-center gap-2"><FaUsers /> Clientes</h3>
                   <div className="space-y-2">
-                    {Object.entries(clientsReport).slice(0, 10).map(([k, v]) => (
+                    {Object.entries(clientsReport).filter(([, val]) => val === null || typeof val !== 'object').slice(0, 10).map(([k, v]) => (
                       <div key={k} className="flex justify-between items-center py-1 border-b border-gray-100">
                         <span className="text-sm text-gray-600">{k.replace(/([A-Z])/g, ' $1').trim()}</span>
                         <span className="text-sm font-semibold">{typeof v === 'number' ? v : String(v ?? '—')}</span>
@@ -796,10 +892,10 @@ export default function DashboardPage() {
                 <div className="gobarber-card">
                   <h3 className="text-base font-semibold text-[#1A1A2E] mb-3 flex items-center gap-2"><FaCut /> Barbeiros</h3>
                   <div className="space-y-2">
-                    {(Array.isArray(barbersReport) ? barbersReport : Object.entries(barbersReport)).slice(0, 10).map((item: any, i: number) => (
+                    {(Array.isArray(barbersReport) ? barbersReport : Object.entries(barbersReport).map(([k, v]) => ({ name: k, value: typeof v === 'object' ? (Array.isArray(v) ? v.length : JSON.stringify(v)) : v }))).slice(0, 10).map((item: any, i: number) => (
                       <div key={i} className="flex justify-between items-center py-1 border-b border-gray-100">
-                        <span className="text-sm text-gray-600">{item.name || item[0]?.replace?.(/([A-Z])/g, ' $1')?.trim?.() || `#${i + 1}`}</span>
-                        <span className="text-sm font-semibold">{item.value ?? item.appointments ?? item[1] ?? '—'}</span>
+                        <span className="text-sm text-gray-600">{String(item.name || `#${i + 1}`)}</span>
+                        <span className="text-sm font-semibold">{typeof (item.value ?? item.appointments ?? item.active) === 'object' ? JSON.stringify(item.value ?? item.active) : String(item.value ?? item.appointments ?? item.active ?? '—')}</span>
                       </div>
                     ))}
                   </div>
@@ -809,10 +905,10 @@ export default function DashboardPage() {
                 <div className="gobarber-card">
                   <h3 className="text-base font-semibold text-[#1A1A2E] mb-3 flex items-center gap-2"><FaCut /> Serviços</h3>
                   <div className="space-y-2">
-                    {(Array.isArray(servicesReport) ? servicesReport : Object.entries(servicesReport)).slice(0, 10).map((item: any, i: number) => (
+                    {(Array.isArray(servicesReport) ? servicesReport : Object.entries(servicesReport).map(([k, v]) => ({ name: k, value: typeof v === 'object' ? (Array.isArray(v) ? v.length : JSON.stringify(v)) : v }))).slice(0, 10).map((item: any, i: number) => (
                       <div key={i} className="flex justify-between items-center py-1 border-b border-gray-100">
-                        <span className="text-sm text-gray-600">{item.name || item[0]?.replace?.(/([A-Z])/g, ' $1')?.trim?.() || `#${i + 1}`}</span>
-                        <span className="text-sm font-semibold">{item.count ?? item.revenue ?? item[1] ?? '—'}</span>
+                        <span className="text-sm text-gray-600">{String(item.name || `#${i + 1}`)}</span>
+                        <span className="text-sm font-semibold">{typeof (item.count ?? item.revenue ?? item.value) === 'object' ? JSON.stringify(item.count ?? item.revenue ?? item.value) : String(item.count ?? item.revenue ?? item.value ?? '—')}</span>
                       </div>
                     ))}
                   </div>
@@ -826,7 +922,7 @@ export default function DashboardPage() {
                 <div className="gobarber-card">
                   <h3 className="text-base font-semibold text-[#1A1A2E] mb-3">Comparação Mês a Mês</h3>
                   <div className="space-y-2">
-                    {Object.entries(compareMom).slice(0, 8).map(([k, v]) => (
+                    {Object.entries(compareMom).filter(([, val]) => val === null || typeof val !== 'object').slice(0, 8).map(([k, v]) => (
                       <div key={k} className="flex justify-between items-center py-1 border-b border-gray-100">
                         <span className="text-sm text-gray-600">{k.replace(/([A-Z])/g, ' $1').trim()}</span>
                         <span className={`text-sm font-semibold ${typeof v === 'number' && v > 0 ? 'text-green-600' : typeof v === 'number' && v < 0 ? 'text-red-600' : ''}`}>
@@ -841,7 +937,7 @@ export default function DashboardPage() {
                 <div className="gobarber-card">
                   <h3 className="text-base font-semibold text-[#1A1A2E] mb-3">Comparação Ano a Ano</h3>
                   <div className="space-y-2">
-                    {Object.entries(compareYoy).slice(0, 8).map(([k, v]) => (
+                    {Object.entries(compareYoy).filter(([, val]) => val === null || typeof val !== 'object').slice(0, 8).map(([k, v]) => (
                       <div key={k} className="flex justify-between items-center py-1 border-b border-gray-100">
                         <span className="text-sm text-gray-600">{k.replace(/([A-Z])/g, ' $1').trim()}</span>
                         <span className={`text-sm font-semibold ${typeof v === 'number' && v > 0 ? 'text-green-600' : typeof v === 'number' && v < 0 ? 'text-red-600' : ''}`}>
