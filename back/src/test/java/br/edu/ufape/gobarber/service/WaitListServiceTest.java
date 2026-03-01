@@ -109,7 +109,7 @@ public class WaitListServiceTest {
         when(clientRepository.findById(1L)).thenReturn(Optional.of(client));
         when(barberRepository.findById(1)).thenReturn(Optional.of(barber));
         when(waitListRepository.existsByClientIdClientAndStatusAndBarberIdBarber(
-                eq(1L), eq(WaitList.WaitListStatus.WAITING), eq(1L))).thenReturn(true);
+                eq(1L), eq(WaitList.WaitListStatus.WAITING), eq(1))).thenReturn(true);
 
         assertThrows(RuntimeException.class, () -> 
             waitListService.addToWaitList(1L, 1L, 1, LocalDateTime.now(), true, 0, null)

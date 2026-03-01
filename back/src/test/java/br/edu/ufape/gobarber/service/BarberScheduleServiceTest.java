@@ -175,7 +175,7 @@ public class BarberScheduleServiceTest {
         LocalDateTime start = LocalDateTime.now();
         LocalDateTime end = LocalDateTime.now().plusDays(30);
 
-        when(barberScheduleRepository.findByBarberAndDateRange(eq(1L), any(LocalDateTime.class),
+        when(barberScheduleRepository.findByBarberAndDateRange(eq(1), any(LocalDateTime.class),
                 any(LocalDateTime.class)))
                 .thenReturn(Arrays.asList(schedule));
 
@@ -187,7 +187,7 @@ public class BarberScheduleServiceTest {
 
     @Test
     void testGetBarberVacations_Success() {
-        when(barberScheduleRepository.findByBarberAndType(1L, BarberSchedule.ScheduleType.VACATION))
+        when(barberScheduleRepository.findByBarberAndType(1, BarberSchedule.ScheduleType.VACATION))
                 .thenReturn(Arrays.asList(schedule));
 
         List<BarberSchedule> result = barberScheduleService.getBarberVacations(1L);
@@ -198,7 +198,7 @@ public class BarberScheduleServiceTest {
 
     @Test
     void testGetRecurringSchedules_Success() {
-        when(barberScheduleRepository.findRecurringByBarber(1L)).thenReturn(Arrays.asList(schedule));
+        when(barberScheduleRepository.findRecurringByBarber(1)).thenReturn(Arrays.asList(schedule));
 
         List<BarberSchedule> result = barberScheduleService.getRecurringSchedules(1L);
 
