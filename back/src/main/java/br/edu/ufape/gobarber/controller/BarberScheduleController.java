@@ -106,9 +106,15 @@ public class BarberScheduleController implements BarberScheduleControllerDoc {
     @GetMapping("/availability/slots")
     public ResponseEntity<List<LocalDateTime>> getAvailableSlots(
             @RequestParam Long barberId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date,
+            @RequestParam String date,
             @RequestParam(defaultValue = "30") int slotDurationMinutes) {
-        return ResponseEntity.ok(barberScheduleService.getAvailableSlots(barberId, date, slotDurationMinutes));
+        LocalDateTime dateTime;
+        try {
+            dateTime = LocalDateTime.parse(date);
+        } catch (Exception e) {
+            dateTime = java.time.LocalDate.parse(date).atStartOfDay();
+        }
+        return ResponseEntity.ok(barberScheduleService.getAvailableSlots(barberId, dateTime, slotDurationMinutes));
     }
 
     @GetMapping("/availability/barbers")

@@ -17,13 +17,13 @@ public interface WaitListRepository extends JpaRepository<WaitList, Long> {
 
     Page<WaitList> findByClientIdClient(Long clientId, Pageable pageable);
 
-    Page<WaitList> findByBarberIdBarber(Long barberId, Pageable pageable);
+    Page<WaitList> findByBarberIdBarber(Integer barberId, Pageable pageable);
 
     List<WaitList> findByStatus(WaitList.WaitListStatus status);
 
     @Query("SELECT w FROM WaitList w WHERE w.status = 'WAITING' AND " +
            "w.barber.idBarber = :barberId ORDER BY w.priority DESC, w.createdAt ASC")
-    List<WaitList> findWaitingByBarber(@Param("barberId") Long barberId);
+    List<WaitList> findWaitingByBarber(@Param("barberId") Integer barberId);
 
     @Query("SELECT w FROM WaitList w WHERE w.status = 'WAITING' AND " +
            "w.desiredTime <= :date " +
@@ -36,7 +36,7 @@ public interface WaitListRepository extends JpaRepository<WaitList, Long> {
 
     @Query("SELECT COUNT(w) FROM WaitList w WHERE w.barber.idBarber = :barberId " +
            "AND w.status = 'WAITING'")
-    Long countWaitingByBarber(@Param("barberId") Long barberId);
+    Long countWaitingByBarber(@Param("barberId") Integer barberId);
 
     @Query("SELECT COUNT(w) FROM WaitList w WHERE w.status = 'WAITING'")
     Long countTotalWaiting();
@@ -51,13 +51,13 @@ public interface WaitListRepository extends JpaRepository<WaitList, Long> {
     boolean existsByClientIdClientAndStatusAndBarberIdBarber(
             Long clientId, 
             WaitList.WaitListStatus status, 
-            Long barberId);
+            Integer barberId);
 
     // Additional methods for WaitListService
     List<WaitList> findByClientIdClientOrderByCreatedAtDesc(Long clientId);
 
     List<WaitList> findByBarberIdBarberAndStatusOrderByPriorityAscCreatedAtAsc(
-            Long barberId, WaitList.WaitListStatus status);
+            Integer barberId, WaitList.WaitListStatus status);
 
     List<WaitList> findByDesiredTimeAndStatusOrderByPriorityAscCreatedAtAsc(
             LocalDateTime desiredTime, WaitList.WaitListStatus status);

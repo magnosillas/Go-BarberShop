@@ -92,7 +92,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByPaymentMethod(Payment.PaymentMethod method);
 
     @Query("SELECT p FROM Payment p WHERE p.appointment.id = :appointmentId")
-    Optional<Payment> findByAppointmentIdAppointment(@Param("appointmentId") Long appointmentId);
+    Optional<Payment> findByAppointmentIdAppointment(@Param("appointmentId") Integer appointmentId);
 
     Long countByStatus(Payment.PaymentStatus status);
 }

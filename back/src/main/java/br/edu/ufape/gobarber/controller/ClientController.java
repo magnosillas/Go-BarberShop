@@ -39,13 +39,13 @@ public class ClientController implements ClientControllerDoc {
 
         @Override
         @GetMapping("/top-spenders")
-        public ResponseEntity<List<ClientDTO>> getTopSpenders(@RequestParam int limit) {
+        public ResponseEntity<List<ClientDTO>> getTopSpenders(@RequestParam(defaultValue = "10") int limit) {
             return ResponseEntity.ok(clientService.getTopClients(limit));
         }
 
     @Override
     @GetMapping("/inactive-clients")
-    public ResponseEntity<List<ClientDTO>> getInactiveClients(@RequestParam int days) {
+    public ResponseEntity<List<ClientDTO>> getInactiveClients(@RequestParam(defaultValue = "30") int days) {
         return ResponseEntity.ok(clientService.getInactiveClients(days));
     }
 
@@ -81,9 +81,9 @@ public class ClientController implements ClientControllerDoc {
 
     @Override
     @GetMapping("/birthdays/month")
-    public ResponseEntity<List<ClientDTO>> getBirthdayClientsMonth(@RequestParam Integer month) {
-        // Usa o mês informado ou o mês atual
-        return ResponseEntity.ok(clientService.getClientsWithBirthdayThisMonth());
+    public ResponseEntity<List<ClientDTO>> getBirthdayClientsMonth(@RequestParam(required = false) Integer month) {
+        if (month == null) month = java.time.LocalDate.now().getMonthValue();
+        return ResponseEntity.ok(clientService.getClientsWithBirthdayInMonth(month));
     }
 
     @Override
