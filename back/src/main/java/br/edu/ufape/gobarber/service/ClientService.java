@@ -289,13 +289,19 @@ public class ClientService {
     }
 
     public List<ClientDTO> getVipClients() {
-        return clientRepository.findByLoyaltyTier(Client.LoyaltyTier.PLATINUM).stream()
+        List<Client> vipClients = new java.util.ArrayList<>(clientRepository.findByLoyaltyTier(Client.LoyaltyTier.PLATINUM));
+        vipClients.addAll(clientRepository.findByLoyaltyTier(Client.LoyaltyTier.DIAMOND));
+        return vipClients.stream()
                 .map(ClientDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
     public List<ClientDTO> getClientsWithBirthdayThisMonth() {
         int month = LocalDate.now().getMonthValue();
+        return getClientsWithBirthdayInMonth(month);
+    }
+
+    public List<ClientDTO> getClientsWithBirthdayInMonth(int month) {
         return clientRepository.findAll().stream()
                 .filter(c -> c.getBirthDate() != null && c.getBirthDate().getMonthValue() == month)
                 .map(ClientDTO::fromEntity)

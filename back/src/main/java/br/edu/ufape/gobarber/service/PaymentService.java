@@ -309,7 +309,7 @@ public class PaymentService {
     }
 
     public PaymentDTO findByAppointment(Long appointmentId) {
-        Payment payment = paymentRepository.findByAppointmentIdAppointment(appointmentId)
+        Payment payment = paymentRepository.findByAppointmentIdAppointment(appointmentId.intValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Pagamento não encontrado"));
         return PaymentDTO.fromEntity(payment);
     }

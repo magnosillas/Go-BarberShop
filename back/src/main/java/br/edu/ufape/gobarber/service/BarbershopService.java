@@ -250,14 +250,16 @@ public class BarbershopService {
         shop.setBannerUrl(dto.getBannerUrl());
         shop.setOpeningHours(dto.getOpeningHours());
 
-        Address address = new Address();
-        address.setStreet(dto.getStreet());
-        address.setNumber(dto.getNumber());
-        address.setNeighborhood(dto.getNeighborhood());
-        address.setCity(dto.getCity());
-        address.setState(dto.getState());
-        address.setCep(dto.getCep());
-        shop.setAddress(address);
+        if (dto.getStreet() != null && !dto.getStreet().isBlank()) {
+            Address address = new Address();
+            address.setStreet(dto.getStreet());
+            address.setNumber(dto.getNumber());
+            address.setNeighborhood(dto.getNeighborhood());
+            address.setCity(dto.getCity());
+            address.setState(dto.getState());
+            address.setCep(dto.getCep());
+            shop.setAddress(address);
+        }
 
         return shop;
     }

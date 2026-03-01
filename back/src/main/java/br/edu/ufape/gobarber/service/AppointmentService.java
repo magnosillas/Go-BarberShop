@@ -271,7 +271,7 @@ public class AppointmentService {
         for(Integer id : appointmentCreateDTO.getServiceTypeIds()) {
             Services s = servicesService.getServiceEntity(id);
             services.add(s);
-            timeMinutes += (s.getTime().getHour() + s.getTime().getMinute());
+            timeMinutes += (s.getTime().getHour() * 60 + s.getTime().getMinute());
             price += s.getValue();
         }
 

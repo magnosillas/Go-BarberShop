@@ -33,7 +33,7 @@ public class BarberScheduleService {
         // Valida conflitos
         if (!recurring) {
             List<BarberSchedule> conflicts = barberScheduleRepository.findConflictingSchedules(
-                    barberId, startDateTime, endDateTime);
+                    barberId.intValue(), startDateTime, endDateTime);
             if (!conflicts.isEmpty()) {
                 throw new RuntimeException("Já existe um bloqueio neste horário");
             }
@@ -108,15 +108,15 @@ public class BarberScheduleService {
     // === Consultas ===
 
     public List<BarberSchedule> getBarberScheduleBlocks(Long barberId, LocalDateTime start, LocalDateTime end) {
-        return barberScheduleRepository.findByBarberAndDateRange(barberId, start, end);
+        return barberScheduleRepository.findByBarberAndDateRange(barberId.intValue(), start, end);
     }
 
     public List<BarberSchedule> getBarberVacations(Long barberId) {
-        return barberScheduleRepository.findByBarberAndType(barberId, BarberSchedule.ScheduleType.VACATION);
+        return barberScheduleRepository.findByBarberAndType(barberId.intValue(), BarberSchedule.ScheduleType.VACATION);
     }
 
     public List<BarberSchedule> getRecurringSchedules(Long barberId) {
-        return barberScheduleRepository.findRecurringByBarber(barberId);
+        return barberScheduleRepository.findRecurringByBarber(barberId.intValue());
     }
 
     // === Verificações de Disponibilidade ===
@@ -124,7 +124,7 @@ public class BarberScheduleService {
     public boolean isBarberAvailable(Long barberId, LocalDateTime startTime, LocalDateTime endTime) {
         // Verifica bloqueios específicos
         List<BarberSchedule> conflicts = barberScheduleRepository.findConflictingSchedules(
-                barberId, startTime, endTime);
+                barberId.intValue(), startTime, endTime);
         if (!conflicts.isEmpty()) {
             return false;
         }
@@ -135,7 +135,7 @@ public class BarberScheduleService {
         LocalTime end = endTime.toLocalTime();
         
         List<BarberSchedule> recurringConflicts = barberScheduleRepository.findRecurringConflicts(
-                barberId, dayOfWeek, start, end);
+                barberId.intValue(), dayOfWeek, start, end);
         
         return recurringConflicts.isEmpty();
     }
@@ -184,7 +184,7 @@ public class BarberScheduleService {
         LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0);
         LocalDateTime endOfYear = LocalDateTime.of(year, 12, 31, 23, 59);
         
-        List<BarberSchedule> vacations = barberScheduleRepository.findByBarberAndDateRange(barberId, startOfYear, endOfYear)
+        List<BarberSchedule> vacations = barberScheduleRepository.findByBarberAndDateRange(barberId.intValue(), startOfYear, endOfYear)
                 .stream()
                 .filter(s -> s.getScheduleType() == BarberSchedule.ScheduleType.VACATION)
                 .toList();

@@ -38,7 +38,8 @@ public class DashboardService {
 
         // === Financeiro ===
         Double revenue = paymentRepository.sumRevenueByDateRange(startDateTime, endDateTime);
-        dashboard.setTotalRevenue(revenue != null ? revenue : 0.0);
+        if (revenue == null) revenue = 0.0;
+        dashboard.setTotalRevenue(revenue);
 
         Double prevRevenue = paymentRepository.sumRevenueByDateRange(prevStartDateTime, prevEndDateTime);
         if (prevRevenue != null && prevRevenue > 0) {
