@@ -60,7 +60,7 @@ public interface BarberScheduleControllerDoc {
     ResponseEntity<Boolean> checkAvailability(Long barberId, LocalDateTime startTime, LocalDateTime endTime);
 
     @Operation(summary = "Horários disponíveis", description = "Lista slots disponíveis do barbeiro no dia")
-    ResponseEntity<List<LocalDateTime>> getAvailableSlots(Long barberId, LocalDateTime date, int slotDurationMinutes);
+    ResponseEntity<List<LocalDateTime>> getAvailableSlots(Long barberId, String date, int slotDurationMinutes);
 
     @Operation(summary = "Barbeiros disponíveis", description = "Lista barbeiros disponíveis para um horário")
     ResponseEntity<List<Barber>> getAvailableBarbers(LocalDateTime startTime, LocalDateTime endTime);

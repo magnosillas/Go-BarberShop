@@ -22,6 +22,7 @@ import {
   FaUserTie,
   FaCopy,
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface Payment {
   idPayment?: number;
@@ -169,7 +170,17 @@ export default function PagamentosPage() {
   }
 
   async function cancelPayment(id: number) {
-    if (!confirm("Cancelar este pagamento?")) return;
+    const result = await Swal.fire({
+      title: "Cancelar pagamento?",
+      text: "Deseja realmente cancelar este pagamento?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, cancelar!",
+      cancelButtonText: "Voltar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "POST", uri: `/payment/${id}/cancel` });
       if (res?.status === 200) { toast.success("Pagamento cancelado!"); loadPayments(); }
@@ -178,7 +189,18 @@ export default function PagamentosPage() {
   }
 
   async function refundPayment(id: number) {
-    const reason = prompt("Motivo do reembolso:");
+    const { value: reason } = await Swal.fire({
+      title: "Motivo do reembolso",
+      input: "text",
+      inputLabel: "Informe o motivo do reembolso",
+      inputPlaceholder: "Ex: Cliente solicitou cancelamento",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Reembolsar",
+      cancelButtonText: "Cancelar",
+      inputValidator: (value) => { if (!value) return "O motivo é obrigatório!"; },
+    });
     if (!reason) return;
     try {
       const res = await generica({ metodo: "POST", uri: `/payment/${id}/refund`, params: { reason } });
@@ -195,11 +217,33 @@ export default function PagamentosPage() {
   }
 
   async function partialRefund(id: number) {
-    const amountStr = prompt("Valor do reembolso parcial (R$):");
+    const { value: amountStr } = await Swal.fire({
+      title: "Reembolso Parcial",
+      input: "number",
+      inputLabel: "Valor do reembolso (R$)",
+      inputPlaceholder: "0.00",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Continuar",
+      cancelButtonText: "Cancelar",
+      inputValidator: (value) => { if (!value || parseFloat(value) <= 0) return "Informe um valor válido!"; },
+    });
     if (!amountStr) return;
-    const reason = prompt("Motivo:") || "Reembolso parcial";
+    const { value: reason } = await Swal.fire({
+      title: "Motivo do reembolso parcial",
+      input: "text",
+      inputLabel: "Informe o motivo",
+      inputValue: "Reembolso parcial",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Reembolsar",
+      cancelButtonText: "Cancelar",
+    });
+    if (reason === undefined) return;
     try {
-      const res = await generica({ metodo: "POST", uri: `/payment/${id}/partial-refund`, params: { amount: parseFloat(amountStr), reason } });
+      const res = await generica({ metodo: "POST", uri: `/payment/${id}/partial-refund`, params: { amount: parseFloat(amountStr), reason: reason || "Reembolso parcial" } });
       if (res?.status === 200) { toast.success("Reembolso parcial realizado!"); loadPayments(); }
       else toast.error("Erro ao reembolsar parcialmente");
     } catch { toast.error("Erro no reembolso parcial"); }
@@ -421,19 +465,19 @@ export default function PagamentosPage() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="gobarber-card text-center">
                 <p className="text-xs text-gray-500">Receita Total</p>
-                <p className="text-xl font-bold text-green-600">R$ {(revenueStats.total || 0).toFixed?.(2) ?? revenueStats.total}</p>
+                <p className="text-xl font-bold text-green-600">R$ {Number(revenueStats.total || 0).toFixed(2)}</p>
               </div>
               <div className="gobarber-card text-center">
                 <p className="text-xs text-gray-500">Receita Hoje</p>
-                <p className="text-xl font-bold text-blue-600">R$ {(revenueStats.today || 0).toFixed?.(2) ?? revenueStats.today}</p>
+                <p className="text-xl font-bold text-blue-600">R$ {Number(revenueStats.today || 0).toFixed(2)}</p>
               </div>
               <div className="gobarber-card text-center">
                 <p className="text-xs text-gray-500">Receita Mês</p>
-                <p className="text-xl font-bold text-purple-600">R$ {(revenueStats.month || 0).toFixed?.(2) ?? revenueStats.month}</p>
+                <p className="text-xl font-bold text-purple-600">R$ {Number(revenueStats.month || 0).toFixed(2)}</p>
               </div>
               <div className="gobarber-card text-center">
                 <p className="text-xs text-gray-500">Ticket Médio</p>
-                <p className="text-xl font-bold text-[#E94560]">R$ {avgTicket.toFixed?.(2) ?? avgTicket}</p>
+                <p className="text-xl font-bold text-[#E94560]">R$ {Number(avgTicket || 0).toFixed(2)}</p>
               </div>
               <div className="gobarber-card text-center">
                 <p className="text-xs text-gray-500">Total Pagamentos</p>
@@ -482,11 +526,11 @@ export default function PagamentosPage() {
                 <div key={i} className="grid grid-cols-2 gap-4">
                   <div className="p-3 bg-green-50 rounded-lg text-center">
                     <p className="text-xs text-gray-500">Receita</p>
-                    <p className="text-lg font-bold text-green-600">R$ {typeof bc.revenue === 'number' ? bc.revenue.toFixed(2) : (bc.revenue?.total?.toFixed?.(2) ?? JSON.stringify(bc.revenue))}</p>
+                    <p className="text-lg font-bold text-green-600">R$ {Number(typeof bc.revenue === 'number' ? bc.revenue : bc.revenue?.total || 0).toFixed(2)}</p>
                   </div>
                   <div className="p-3 bg-blue-50 rounded-lg text-center">
                     <p className="text-xs text-gray-500">Comissão</p>
-                    <p className="text-lg font-bold text-blue-600">R$ {typeof bc.commission === 'number' ? bc.commission.toFixed(2) : (bc.commission?.total?.toFixed?.(2) ?? JSON.stringify(bc.commission))}</p>
+                    <p className="text-lg font-bold text-blue-600">R$ {Number(typeof bc.commission === 'number' ? bc.commission : bc.commission?.total || 0).toFixed(2)}</p>
                   </div>
                 </div>
               ))}

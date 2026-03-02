@@ -111,6 +111,9 @@ public class SecurityConfiguration {
                         .antMatchers(HttpMethod.GET, "/barbershop/**").hasAnyRole("ADMIN", "SECRETARY", "BARBER", "CLIENT")
                         .antMatchers("/barbershop/**").hasRole("ADMIN")
 
+                        // Auth - change password para qualquer autenticado
+                        .antMatchers(HttpMethod.PUT, "/auth/change-password").authenticated()
+
                         .anyRequest().denyAll());
 
         http.addFilterBefore(new TokenAuthenticationFilter(tokenService), UsernamePasswordAuthenticationFilter.class);

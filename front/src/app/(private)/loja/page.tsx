@@ -21,7 +21,7 @@ interface Product {
   brand?: string;
   price?: number;
   size?: string;
-  quantity?: number;
+  quantity?: number; // computed from stock
 }
 
 interface CartItem {
@@ -58,7 +58,27 @@ export default function LojaPage() {
         params: { page: 0, size: 100 },
       });
       const data = response?.data?.content || response?.data || [];
-      setProducts(Array.isArray(data) ? data : []);
+      const prods: Product[] = Array.isArray(data) ? data : [];
+
+      // Fetch stock totals for each product in parallel
+      const withStock = await Promise.all(
+        prods.map(async (p) => {
+          try {
+            const sRes = await generica({
+              metodo: "GET",
+              uri: `/stock/product/${p.id}`,
+              params: { page: 0, size: 100 },
+            });
+            const stockData = sRes?.data?.content || sRes?.data || [];
+            const entries = Array.isArray(stockData) ? stockData : [];
+            const totalQty = entries.reduce((sum: number, e: any) => sum + (e.quantity || 0), 0);
+            return { ...p, quantity: totalQty };
+          } catch {
+            return { ...p, quantity: 0 };
+          }
+        })
+      );
+      setProducts(withStock);
     } catch {
       toast.error("Erro ao carregar produtos");
     } finally {
@@ -136,8 +156,13 @@ export default function LojaPage() {
   }
 
   const cartTotal = cart.reduce((sum, c) => sum + (c.product.price ?? 0) * c.qty, 0);
-  const discount = appliedCoupon?.discountPercentage ? cartTotal * (appliedCoupon.discountPercentage / 100) : 0;
-  const cartFinal = cartTotal - discount;
+  // API Sale returns totalPrice (fixed discount amount), not discountPercentage
+  const discount = appliedCoupon?.discountPercentage
+    ? cartTotal * (appliedCoupon.discountPercentage / 100)
+    : appliedCoupon?.totalPrice
+      ? Math.min(appliedCoupon.totalPrice, cartTotal)
+      : 0;
+  const cartFinal = Math.max(cartTotal - discount, 0);
   const cartCount = cart.reduce((sum, c) => sum + c.qty, 0);
 
   const filteredProducts = products.filter((p) => {
@@ -384,7 +409,7 @@ export default function LojaPage() {
               </div>
               {appliedCoupon && (
                 <div className="flex items-center justify-between text-sm text-green-600">
-                  <span>Desconto ({appliedCoupon.discountPercentage || 0}%)</span>
+                  <span>Desconto ({appliedCoupon.discountPercentage ? `${appliedCoupon.discountPercentage}%` : `R$ ${appliedCoupon.totalPrice?.toFixed(2) || '0.00'}`})</span>
                   <span>-R$ {discount.toFixed(2)}</span>
                 </div>
               )}

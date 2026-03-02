@@ -12,6 +12,7 @@ import {
   FaPlus,
   FaTimesCircle,
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface ServiceItem {
   id?: number;
@@ -83,7 +84,17 @@ export default function MeusAgendamentosPage() {
   }
 
   async function handleCancel(id: number) {
-    if (!confirm("Deseja cancelar este agendamento?")) return;
+    const result = await Swal.fire({
+      title: "Cancelar agendamento?",
+      text: "Deseja realmente cancelar este agendamento?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, cancelar!",
+      cancelButtonText: "Voltar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({
         metodo: "POST",

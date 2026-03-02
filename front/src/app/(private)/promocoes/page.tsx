@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { generica } from "@/api/api";
 import { toast } from "react-toastify";
 import { FaPlus, FaTag, FaEdit, FaTrash, FaEnvelope, FaPaperPlane, FaEye, FaSearch } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface Sale {
   id: number;
@@ -20,7 +21,16 @@ interface Sale {
   active?: boolean;
 }
 
-const initialForm = { name: "", description: "", totalPrice: 0, startDate: "", endDate: "", coupon: "" };
+/** Derive active status from dates (API does not return 'active') */
+function isSaleActive(sale: Sale): boolean {
+  if (sale.active != null) return sale.active;
+  const now = new Date();
+  if (sale.endDate && new Date(sale.endDate) < now) return false;
+  if (sale.startDate && new Date(sale.startDate) > now) return false;
+  return true;
+}
+
+const initialForm = { name: "", totalPrice: 0, startDate: "", endDate: "", coupon: "" };
 
 export default function PromocoesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -54,7 +64,6 @@ export default function PromocoesPage() {
   function openEdit(s: Sale) {
     setForm({
       name: s.name || s.title || "",
-      description: s.description || "",
       totalPrice: s.totalPrice || 0,
       startDate: s.startDate ? s.startDate.substring(0, 10) : "",
       endDate: s.endDate ? s.endDate.substring(0, 10) : "",
@@ -101,14 +110,24 @@ export default function PromocoesPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name) { toast.error("Preencha o nome da promoção"); return; }
+    if (!form.totalPrice || form.totalPrice <= 0) { toast.error("O preço deve ser maior que zero"); return; }
     setSaving(true);
+    // Convert empty strings to null/undefined for backend validation
+    const payload: Record<string, any> = {
+      name: form.name,
+      totalPrice: form.totalPrice,
+    };
+    if (form.startDate) payload.startDate = form.startDate;
+    if (form.endDate) payload.endDate = form.endDate;
+    if (form.coupon && form.coupon.trim()) payload.coupon = form.coupon.trim();
     try {
       if (editingId) {
-        const res = await generica({ metodo: "PUT", uri: `/sale/${editingId}`, data: form });
+        const res = await generica({ metodo: "PUT", uri: `/sale/${editingId}`, data: payload });
         if (res?.status === 200) { toast.success("Promoção atualizada!"); setModalOpen(false); loadSales(); }
-        else toast.error("Erro ao atualizar promoção");
+        else toast.error(res?.data?.message || "Erro ao atualizar promoção");
       } else {
-        const res = await generica({ metodo: "POST", uri: "/sale", data: form });
+        if (!form.endDate) { toast.error("Data fim é obrigatória"); setSaving(false); return; }
+        const res = await generica({ metodo: "POST", uri: "/sale", data: payload });
         if (res?.status === 200 || res?.status === 201) { toast.success("Promoção cadastrada!"); setModalOpen(false); loadSales(); }
         else toast.error(res?.data?.message || "Erro ao cadastrar promoção");
       }
@@ -117,7 +136,17 @@ export default function PromocoesPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Tem certeza que deseja excluir esta promoção?")) return;
+    const result = await Swal.fire({
+      title: "Tem certeza?",
+      text: "Deseja realmente excluir esta promoção?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/sale/${id}` });
       if (res?.status === 200 || res?.status === 204) { toast.success("Promoção excluída!"); loadSales(); }
@@ -133,7 +162,7 @@ export default function PromocoesPage() {
         metodo: "POST",
         uri: `/sale/email/notify?idSale=${selectedSaleForEmail.id}`,
       });
-      if (res?.status === 200 || res?.status === 201) {
+      if (res?.status === 200 || res?.status === 201 || res?.status === 202) {
         toast.success("Promoção enviada por email para os clientes!");
         setEmailModalOpen(false);
       } else {
@@ -224,8 +253,8 @@ export default function PromocoesPage() {
                   {sale.endDate && <> até {new Date(sale.endDate).toLocaleDateString("pt-BR")}</>}
                 </div>
                 <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                  <span className={`px-2 py-1 text-xs rounded-full ${sale.active !== false ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                    {sale.active !== false ? "Ativa" : "Inativa"}
+                  <span className={`px-2 py-1 text-xs rounded-full ${isSaleActive(sale) ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                    {isSaleActive(sale) ? "Ativa" : "Inativa"}
                   </span>
                   <div className="flex gap-2">
                     <button onClick={() => viewSaleDetail(sale.id)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Detalhes"><FaEye /></button>
@@ -254,22 +283,12 @@ export default function PromocoesPage() {
             <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="gobarber-input" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="gobarber-input min-h-[80px]"
-              placeholder="Descrição da promoção (será incluída no email)"
-              rows={3}
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Preço / Desconto (R$) *</label>
+            <input type="number" step="0.01" min="0.01" value={form.totalPrice} onChange={(e) => setForm({ ...form, totalPrice: parseFloat(e.target.value) || 0 })} className="gobarber-input" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Preço / Desconto (R$)</label>
-            <input type="number" step="0.01" value={form.totalPrice} onChange={(e) => setForm({ ...form, totalPrice: parseFloat(e.target.value) || 0 })} className="gobarber-input" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cupom</label>
-            <input type="text" value={form.coupon} onChange={(e) => setForm({ ...form, coupon: e.target.value.toUpperCase() })} className="gobarber-input" placeholder="Ex: PROMO10" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cupom <span className="text-xs text-gray-400">(7 caracteres)</span></label>
+            <input type="text" value={form.coupon} onChange={(e) => setForm({ ...form, coupon: e.target.value.toUpperCase() })} className="gobarber-input" placeholder="Ex: PROMO10" maxLength={7} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -277,8 +296,8 @@ export default function PromocoesPage() {
               <input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} className="gobarber-input" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim</label>
-              <input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} className="gobarber-input" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim *</label>
+              <input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} className="gobarber-input" required />
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t">
@@ -355,8 +374,8 @@ export default function PromocoesPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-lg text-[#1A1A2E]">{detailSale.name || detailSale.title}</h3>
-                <span className={`px-2 py-0.5 text-xs rounded-full ${detailSale.active !== false ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                  {detailSale.active !== false ? "Ativa" : "Inativa"}
+                <span className={`px-2 py-0.5 text-xs rounded-full ${isSaleActive(detailSale) ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                  {isSaleActive(detailSale) ? "Ativa" : "Inativa"}
                 </span>
               </div>
             </div>

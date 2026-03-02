@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { generica } from "@/api/api";
 import { toast } from "react-toastify";
 import { FaPlus, FaSearch, FaTrash, FaEdit, FaEye, FaCheck, FaTimes, FaClock, FaHistory, FaCalendarCheck, FaUserClock } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface Appointment {
   id: number;
@@ -123,7 +124,7 @@ export default function AgendamentosPage() {
     try {
       if (editingId) {
         const res = await generica({ metodo: "PUT", uri: `/appointments/${editingId}`, data: payload });
-        if (res?.status === 200) { toast.success("Agendamento atualizado!"); setModalOpen(false); loadAppointments(); }
+        if (res?.status === 200 || res?.status === 204) { toast.success("Agendamento atualizado!"); setModalOpen(false); loadAppointments(); }
         else toast.error("Erro ao atualizar agendamento");
       } else {
         const res = await generica({ metodo: "POST", uri: "/appointments", data: payload });
@@ -135,7 +136,17 @@ export default function AgendamentosPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Tem certeza que deseja excluir este agendamento?")) return;
+    const result = await Swal.fire({
+      title: "Tem certeza?",
+      text: "Deseja realmente excluir este agendamento?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/appointments/${id}` });
       if (res?.status === 200 || res?.status === 204) { toast.success("Agendamento excluído!"); loadAppointments(); loadPendingAppointments(); }
@@ -496,7 +507,10 @@ export default function AgendamentosPage() {
                   {detailModal.serviceType?.map(s => s.name).join(", ") || detailModal.serviceName || detailModal.services?.map(s => s.name).join(", ") || "—"}
                 </p>
               </div>
-              <div><span className="text-xs text-gray-500">Data/Hora</span><p className="font-medium">{formatDateTime(detailModal)}</p></div>
+              <div><span className="text-xs text-gray-500">Início</span><p className="font-medium">{formatDateTime(detailModal)}</p></div>
+              {detailModal.endTime && (
+                <div><span className="text-xs text-gray-500">Término</span><p className="font-medium">{detailModal.endTime.includes("/") ? detailModal.endTime : new Date(detailModal.endTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p></div>
+              )}
               <div><span className="text-xs text-gray-500">Status</span><p className="font-medium">{getStatusBadge(detailModal.status)}</p></div>
               <div><span className="text-xs text-gray-500">Telefone</span><p className="font-medium">{detailModal.clientNumber || "—"}</p></div>
               {detailModal.totalPrice != null && (

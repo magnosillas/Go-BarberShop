@@ -50,7 +50,10 @@ public class SecretaryService {
 
             AddressCreateDTO addressCreateDTO = secretaryCreateDTO.getAddress();
 
-            Address address = addressService.creatAddress(addressCreateDTO);
+            Address address = null;
+            if (addressCreateDTO != null) {
+                address = addressService.creatAddress(addressCreateDTO);
+            }
 
             Secretary secretary = convertCreateDTOtoEntity(secretaryCreateDTO);
 
@@ -76,14 +79,19 @@ public class SecretaryService {
 
         AddressCreateDTO addressCreateDTO = secretaryCreateDTO.getAddress();
         Address address = secretary.getAddress();
-        address.setStreet(addressCreateDTO.getStreet());
-        address.setNumber(addressCreateDTO.getNumber());
-        address.setNeighborhood(addressCreateDTO.getNeighborhood());
-        address.setCity(addressCreateDTO.getCity());
-        address.setState(addressCreateDTO.getState());
-        address.setCep(addressCreateDTO.getCep());
-
-        address = addressRepository.save(address);
+        if (addressCreateDTO != null) {
+            if (address == null) {
+                address = addressService.creatAddress(addressCreateDTO);
+            } else {
+                address.setStreet(addressCreateDTO.getStreet());
+                address.setNumber(addressCreateDTO.getNumber());
+                address.setNeighborhood(addressCreateDTO.getNeighborhood());
+                address.setCity(addressCreateDTO.getCity());
+                address.setState(addressCreateDTO.getState());
+                address.setCep(addressCreateDTO.getCep());
+                address = addressRepository.save(address);
+            }
+        }
 
         secretary.setName(secretaryCreateDTO.getName());
         secretary.setCpf(secretaryCreateDTO.getCpf());
@@ -91,6 +99,14 @@ public class SecretaryService {
         secretary.setSalary(secretaryCreateDTO.getSalary());
         secretary.setAdmissionDate(secretaryCreateDTO.getAdmissionDate());
         secretary.setWorkload(secretaryCreateDTO.getWorkload());
+        secretary.setContact(secretaryCreateDTO.getContact());
+
+        if (secretaryCreateDTO.getStart() != null && !secretaryCreateDTO.getStart().isEmpty()) {
+            secretary.setStart(LocalTime.parse(secretaryCreateDTO.getStart(), DateTimeFormatter.ofPattern("HH:mm")));
+        }
+        if (secretaryCreateDTO.getEnd() != null && !secretaryCreateDTO.getEnd().isEmpty()) {
+            secretary.setEnd(LocalTime.parse(secretaryCreateDTO.getEnd(), DateTimeFormatter.ofPattern("HH:mm")));
+        }
 
         if (profilePhoto != null && !profilePhoto.isEmpty()) {
             try {

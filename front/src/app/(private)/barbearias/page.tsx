@@ -8,6 +8,7 @@ import {
   FaSearch, FaStore, FaMapMarkerAlt, FaPhone, FaEnvelope,
   FaClock, FaUsers, FaTimes, FaEye, FaUserPlus, FaUserMinus, FaFilter
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface BarbershopData {
   idBarbershop: number;
@@ -119,8 +120,21 @@ export default function BarbeariasPage() {
     setSaving(true);
     try {
       const payload = {
-        ...form,
+        name: form.name.trim(),
         number: form.number ? Number(form.number) : null,
+        cep: form.cep ? form.cep.replace(/\D/g, "").substring(0, 8) : "",
+        ...(form.slug?.trim() ? { slug: form.slug.trim() } : {}),
+        ...(form.description?.trim() ? { description: form.description.trim() } : {}),
+        ...(form.cnpj?.trim() ? { cnpj: form.cnpj.trim() } : {}),
+        ...(form.phone?.trim() ? { phone: form.phone.trim() } : {}),
+        ...(form.email?.trim() ? { email: form.email.trim() } : {}),
+        ...(form.logoUrl?.trim() ? { logoUrl: form.logoUrl.trim() } : {}),
+        ...(form.bannerUrl?.trim() ? { bannerUrl: form.bannerUrl.trim() } : {}),
+        ...(form.openingHours?.trim() ? { openingHours: form.openingHours.trim() } : {}),
+        ...(form.street?.trim() ? { street: form.street.trim() } : {}),
+        ...(form.neighborhood?.trim() ? { neighborhood: form.neighborhood.trim() } : {}),
+        ...(form.city?.trim() ? { city: form.city.trim() } : {}),
+        ...(form.state?.trim() ? { state: form.state.trim() } : {}),
       };
 
       if (editingId) {
@@ -144,7 +158,17 @@ export default function BarbeariasPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Deseja realmente excluir esta barbearia?")) return;
+    const result = await Swal.fire({
+      title: "Tem certeza?",
+      text: "Deseja realmente excluir esta barbearia?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/barbershop/${id}` });
       if (res?.status === 200 || res?.status === 204) { toast.success("Barbearia excluída"); loadBarbershops(); }
@@ -210,7 +234,17 @@ export default function BarbeariasPage() {
   }
 
   async function removeClientFromBarbershop(barbershopId: number, clientId: number) {
-    if (!confirm("Remover este cliente da barbearia?")) return;
+    const result = await Swal.fire({
+      title: "Remover cliente?",
+      text: "Deseja remover este cliente da barbearia?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, remover!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/barbershop/${barbershopId}/client/${clientId}` });
       if (res?.status === 200 || res?.status === 204) {
@@ -525,7 +559,7 @@ export default function BarbeariasPage() {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">CEP</label>
-                  <input value={form.cep} onChange={e => setForm({...form, cep: e.target.value})}
+                  <input value={form.cep} onChange={e => { const digits = e.target.value.replace(/\D/g, "").substring(0, 8); const fmt = digits.length > 5 ? digits.substring(0, 5) + "-" + digits.substring(5) : digits; setForm({...form, cep: fmt}); }} maxLength={9} placeholder="00000-000"
                     className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-700 text-white focus:border-yellow-500 focus:outline-none" />
                 </div>
               </div>

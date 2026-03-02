@@ -1,6 +1,7 @@
 package br.edu.ufape.gobarber.controller.auth;
 
 import br.edu.ufape.gobarber.doc.AuthControllerDoc;
+import br.edu.ufape.gobarber.dto.user.ChangePasswordDTO;
 import br.edu.ufape.gobarber.dto.user.LoginDTO;
 import br.edu.ufape.gobarber.dto.user.UserCreateDTO;
 import br.edu.ufape.gobarber.dto.user.UserDTO;
@@ -78,6 +79,22 @@ public class AuthController implements AuthControllerDoc {
         tokenService.invalidateToken(request);
 
         return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(HttpServletRequest request, @Validated @RequestBody ChangePasswordDTO dto) {
+        try {
+            String token = request.getHeader("Authorization");
+            Integer userId = userService.getJtiFromToken(token);
+            userService.changePassword(userId, dto.getCurrentPassword(), dto.getNewPassword());
+            return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso"));
+        } catch (RuntimeException e) {
+            if ("Senha atual incorreta".equals(e.getMessage())) {
+                return new ResponseEntity<>(Map.of("error", "Senha atual incorreta"), HttpStatus.BAD_REQUEST);
+            }
+            log.error("Erro ao alterar senha: {} - {}", e.getClass().getSimpleName(), e.getMessage());
+            return new ResponseEntity<>(Map.of("error", "Erro ao alterar senha"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override

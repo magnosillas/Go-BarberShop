@@ -14,29 +14,29 @@ import java.util.List;
 @Repository
 public interface BarberScheduleRepository extends JpaRepository<BarberSchedule, Long> {
 
-    List<BarberSchedule> findByBarberIdBarber(Long barberId);
+    List<BarberSchedule> findByBarberIdBarber(Integer barberId);
 
-    List<BarberSchedule> findByBarberIdBarberAndIsActiveTrue(Long barberId);
+    List<BarberSchedule> findByBarberIdBarberAndIsActiveTrue(Integer barberId);
 
     @Query("SELECT bs FROM BarberSchedule bs WHERE bs.barber.idBarber = :barberId " +
            "AND bs.isActive = true AND " +
            "((bs.startDateTime <= :dateTime AND (bs.endDateTime IS NULL OR bs.endDateTime >= :dateTime)) " +
            "OR (bs.isRecurring = true AND bs.dayOfWeek = :dayOfWeek))")
     List<BarberSchedule> findActiveSchedulesForDate(
-            @Param("barberId") Long barberId,
+            @Param("barberId") Integer barberId,
             @Param("dateTime") LocalDateTime dateTime,
             @Param("dayOfWeek") DayOfWeek dayOfWeek);
 
     @Query("SELECT bs FROM BarberSchedule bs WHERE bs.barber.idBarber = :barberId " +
            "AND bs.scheduleType = :type AND bs.isActive = true")
     List<BarberSchedule> findByBarberAndType(
-            @Param("barberId") Long barberId,
+            @Param("barberId") Integer barberId,
             @Param("type") BarberSchedule.ScheduleType type);
 
     @Query("SELECT bs FROM BarberSchedule bs WHERE bs.barber.idBarber = :barberId " +
            "AND bs.startDateTime >= :startDateTime AND bs.startDateTime <= :endDateTime AND bs.isActive = true")
     List<BarberSchedule> findByBarberAndDateRange(
-            @Param("barberId") Long barberId,
+            @Param("barberId") Integer barberId,
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime);
 
@@ -47,11 +47,11 @@ public interface BarberScheduleRepository extends JpaRepository<BarberSchedule, 
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime);
 
-    void deleteByBarberIdBarberAndScheduleType(Long barberId, BarberSchedule.ScheduleType type);
+    void deleteByBarberIdBarberAndScheduleType(Integer barberId, BarberSchedule.ScheduleType type);
 
     // Additional methods for BarberScheduleService
     List<BarberSchedule> findByBarberIdBarberAndStartDateTimeBetweenAndIsActiveTrue(
-            Long barberId, LocalDateTime startDateTime, LocalDateTime endDateTime);
+            Integer barberId, LocalDateTime startDateTime, LocalDateTime endDateTime);
 
     List<BarberSchedule> findByScheduleTypeAndStartDateTimeLessThanEqualAndEndDateTimeGreaterThanEqualAndIsActiveTrue(
             BarberSchedule.ScheduleType scheduleType, LocalDateTime startDateTime, LocalDateTime endDateTime);
@@ -60,28 +60,28 @@ public interface BarberScheduleRepository extends JpaRepository<BarberSchedule, 
             BarberSchedule.ScheduleType scheduleType, LocalDateTime dateTime);
 
     List<BarberSchedule> findByBarberIdBarberAndStartDateTimeAndIsActiveTrue(
-            Long barberId, LocalDateTime dateTime);
+            Integer barberId, LocalDateTime dateTime);
 
     // Methods for conflict detection
     @Query("SELECT bs FROM BarberSchedule bs WHERE bs.barber.idBarber = :barberId " +
            "AND bs.isActive = true AND bs.isRecurring = false " +
            "AND ((bs.startDateTime <= :endDateTime AND bs.endDateTime >= :startDateTime))")
     List<BarberSchedule> findConflictingSchedules(
-            @Param("barberId") Long barberId,
+            @Param("barberId") Integer barberId,
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime);
 
     // Methods for recurring schedules
     @Query("SELECT bs FROM BarberSchedule bs WHERE bs.barber.idBarber = :barberId " +
            "AND bs.isActive = true AND bs.isRecurring = true")
-    List<BarberSchedule> findRecurringByBarber(@Param("barberId") Long barberId);
+    List<BarberSchedule> findRecurringByBarber(@Param("barberId") Integer barberId);
 
     @Query("SELECT bs FROM BarberSchedule bs WHERE bs.barber.idBarber = :barberId " +
            "AND bs.isActive = true AND bs.isRecurring = true " +
            "AND bs.dayOfWeek = :dayOfWeek " +
            "AND ((bs.startTime <= :endTime AND bs.endTime >= :startTime))")
     List<BarberSchedule> findRecurringConflicts(
-            @Param("barberId") Long barberId,
+            @Param("barberId") Integer barberId,
             @Param("dayOfWeek") DayOfWeek dayOfWeek,
             @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime);

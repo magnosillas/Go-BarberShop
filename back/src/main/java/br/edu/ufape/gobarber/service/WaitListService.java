@@ -44,7 +44,7 @@ public class WaitListService {
 
         // Verifica se cliente já está na fila para o mesmo barbeiro
         if (barberId != null && waitListRepository.existsByClientIdClientAndStatusAndBarberIdBarber(
-                clientId, WaitList.WaitListStatus.WAITING, barberId)) {
+                clientId, WaitList.WaitListStatus.WAITING, barberId.intValue())) {
             throw new RuntimeException("Cliente já está na lista de espera para este barbeiro");
         }
 
@@ -152,11 +152,11 @@ public class WaitListService {
     }
 
     public Page<WaitList> getWaitListByBarber(Long barberId, Pageable pageable) {
-        return waitListRepository.findByBarberIdBarber(barberId, pageable);
+        return waitListRepository.findByBarberIdBarber(barberId.intValue(), pageable);
     }
 
     public List<WaitList> getWaitingByBarber(Long barberId) {
-        return waitListRepository.findWaitingByBarber(barberId);
+        return waitListRepository.findWaitingByBarber(barberId.intValue());
     }
 
     public List<WaitList> getWaitingByService(Integer serviceId) {
@@ -175,7 +175,7 @@ public class WaitListService {
     }
 
     public Long getWaitingCountByBarber(Long barberId) {
-        return waitListRepository.countWaitingByBarber(barberId);
+        return waitListRepository.countWaitingByBarber(barberId.intValue());
     }
 
     public List<Object[]> getWaitingGroupByBarber() {

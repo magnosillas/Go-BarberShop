@@ -79,9 +79,21 @@ public class SaleService {
         sale.setTotalPrice(saleCreateDTO.getTotalPrice());
         sale.setStartDate(saleCreateDTO.getStartDate());
         sale.setEndDate(saleCreateDTO.getEndDate());
-        sale.setCoupon(saleCreateDTO.getCoupon());
 
-        sale = saleRepository.save(sale);
+        if (saleCreateDTO.getCoupon() != null) {
+            sale.setCoupon(saleCreateDTO.getCoupon());
+        } else if (sale.getCoupon() == null) {
+            sale.setCoupon(generateCoupon(sale.getName()));
+        }
+
+        try {
+            sale = saleRepository.save(sale);
+        } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("constraint [sale_discount_coupon_key]")) {
+                throw new DataBaseException("Cupom já cadastrado no banco de dados.");
+            }
+            throw new DataBaseException("Erro interno no banco de dados. Tente Novamente!");
+        }
 
         return convertSaleToDTO(sale);
     }

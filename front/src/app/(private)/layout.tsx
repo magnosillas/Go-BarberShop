@@ -26,6 +26,7 @@ const routePermissions: Record<string, RoleKey[]> = {
   "/agenda-barbeiro": ["ADMIN", "BARBER"],
   "/loja": ["CLIENT", "ADMIN"],
   "/barbearias": ["ADMIN"],
+  "/enderecos": ["ADMIN", "SECRETARY"],
 };
 
 function LoadingScreen() {

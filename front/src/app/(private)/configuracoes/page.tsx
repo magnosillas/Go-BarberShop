@@ -22,6 +22,7 @@ import {
 } from "react-icons/fa";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import { useRoles } from "@/hooks/useRoles";
+import Swal from "sweetalert2";
 
 interface CancellationRule {
   id: number;
@@ -50,6 +51,12 @@ export default function ConfiguracoesPage() {
   const [savingRule, setSavingRule] = useState(false);
   const [activeRule, setActiveRule] = useState<CancellationRule | null>(null);
   const [detailRule, setDetailRule] = useState<CancellationRule | null>(null);
+
+  // Security - password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
   const [ruleForm, setRuleForm] = useState({
     cancelDeadlineHours: 24,
     cancellationFeePercentage: 0,
@@ -166,7 +173,17 @@ export default function ConfiguracoesPage() {
   }
 
   async function handleDeleteRule(id: number) {
-    if (!confirm("Excluir esta regra?")) return;
+    const result = await Swal.fire({
+      title: "Excluir regra?",
+      text: "Deseja realmente excluir esta regra de cancelamento?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       await generica({ metodo: "DELETE", uri: `/cancellation-rules/${id}` });
       toast.success("Regra excluída");
@@ -182,6 +199,35 @@ export default function ConfiguracoesPage() {
     { key: "notificacoes", label: "Notificações", icon: <FaBell /> },
     { key: "seguranca", label: "Segurança", icon: <FaShieldAlt /> },
   ];
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.warn("A nova senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.warn("As senhas não coincidem");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await generica({
+        metodo: "PUT",
+        uri: "/auth/change-password",
+        data: { currentPassword, newPassword },
+      });
+      toast.success("Senha alterada com sucesso!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || "Erro ao alterar senha";
+      toast.error(msg);
+    } finally {
+      setChangingPassword(false);
+    }
+  }
 
   const tabs = isAdmin
     ? [...baseTabs, { key: "cancelamento", label: "Cancelamento", icon: <FaBan /> }]
@@ -240,8 +286,9 @@ export default function ConfiguracoesPage() {
                     </label>
                     <input
                       type="text"
-                      defaultValue={user?.nome || ""}
-                      className="gobarber-input"
+                      value={user?.nome || ""}
+                      className="gobarber-input bg-gray-50"
+                      readOnly
                     />
                   </div>
                   <div>
@@ -250,27 +297,16 @@ export default function ConfiguracoesPage() {
                     </label>
                     <input
                       type="email"
-                      defaultValue={user?.email || ""}
-                      className="gobarber-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Telefone
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder="(00) 00000-0000"
-                      className="gobarber-input"
+                      value={user?.email || ""}
+                      className="gobarber-input bg-gray-50"
+                      readOnly
                     />
                   </div>
                 </div>
-                <button
-                  className="gobarber-btn-primary flex items-center gap-2"
-                  onClick={() => toast.info("Função em desenvolvimento")}
-                >
-                  <FaSave /> Salvar Alterações
-                </button>
+                <p className="text-sm text-gray-500 italic">
+                  Para alterar dados do perfil, entre em contato com o administrador. 
+                  Use a aba <strong>Segurança</strong> para alterar sua senha.
+                </p>
               </div>
             )}
 
@@ -344,7 +380,7 @@ export default function ConfiguracoesPage() {
             )}
 
             {activeTab === "seguranca" && (
-              <div className="space-y-6">
+              <form onSubmit={handleChangePassword} className="space-y-6">
                 <h2 className="text-lg font-semibold text-[#1A1A2E]">
                   Segurança
                 </h2>
@@ -353,28 +389,54 @@ export default function ConfiguracoesPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Senha atual
                     </label>
-                    <input type="password" className="gobarber-input" />
+                    <input
+                      type="password"
+                      className="gobarber-input"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Nova senha
                     </label>
-                    <input type="password" className="gobarber-input" />
+                    <input
+                      type="password"
+                      className="gobarber-input"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      minLength={6}
+                      required
+                    />
+                    {newPassword.length > 0 && newPassword.length < 6 && (
+                      <p className="text-xs text-red-500 mt-1">Mínimo 6 caracteres</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Confirmar nova senha
                     </label>
-                    <input type="password" className="gobarber-input" />
+                    <input
+                      type="password"
+                      className="gobarber-input"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    {confirmPassword.length > 0 && confirmPassword !== newPassword && (
+                      <p className="text-xs text-red-500 mt-1">As senhas não coincidem</p>
+                    )}
                   </div>
                 </div>
                 <button
+                  type="submit"
+                  disabled={changingPassword}
                   className="gobarber-btn-primary flex items-center gap-2"
-                  onClick={() => toast.info("Função em desenvolvimento")}
                 >
-                  <FaShieldAlt /> Alterar Senha
+                  <FaShieldAlt /> {changingPassword ? "Alterando..." : "Alterar Senha"}
                 </button>
-              </div>
+              </form>
             )}
 
             {activeTab === "cancelamento" && isAdmin && (

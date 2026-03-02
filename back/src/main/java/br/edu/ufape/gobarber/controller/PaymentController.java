@@ -17,7 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -154,8 +156,10 @@ public class PaymentController implements PaymentControllerDoc {
     @Override
     @GetMapping("/revenue/total")
     public ResponseEntity<Double> getTotalRevenue(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        if (startDate == null) startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        if (endDate == null) endDate = LocalDateTime.now();
         return ResponseEntity.ok(paymentService.getTotalRevenue(startDate, endDate));
     }
 
@@ -174,8 +178,10 @@ public class PaymentController implements PaymentControllerDoc {
     @Override
     @GetMapping("/revenue/daily")
     public ResponseEntity<List<Map<String, Object>>> getDailyRevenue(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        if (startDate == null) startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        if (endDate == null) endDate = LocalDateTime.now();
         return ResponseEntity.ok(paymentService.getDailyRevenue(startDate, endDate));
     }
 
@@ -183,8 +189,10 @@ public class PaymentController implements PaymentControllerDoc {
     @GetMapping("/barber/{barberId}/revenue")
     public ResponseEntity<Double> getBarberRevenue(
             @PathVariable Long barberId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        if (startDate == null) startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        if (endDate == null) endDate = LocalDateTime.now();
         return ResponseEntity.ok(paymentService.getBarberRevenue(barberId, startDate, endDate));
     }
 
@@ -192,32 +200,40 @@ public class PaymentController implements PaymentControllerDoc {
     @GetMapping("/barber/{barberId}/commission")
     public ResponseEntity<Double> getBarberCommission(
             @PathVariable Long barberId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        if (startDate == null) startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        if (endDate == null) endDate = LocalDateTime.now();
         return ResponseEntity.ok(paymentService.getBarberCommission(barberId, startDate, endDate));
     }
 
     @Override
     @GetMapping("/average-ticket")
     public ResponseEntity<Double> getAverageTicket(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        if (startDate == null) startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        if (endDate == null) endDate = LocalDateTime.now();
         return ResponseEntity.ok(paymentService.getAverageTicket(startDate, endDate));
     }
 
     @Override
     @GetMapping("/revenue/by-method")
     public ResponseEntity<List<Map<String, Object>>> getRevenueByMethod(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        if (startDate == null) startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        if (endDate == null) endDate = LocalDateTime.now();
         return ResponseEntity.ok(paymentService.getRevenueByPaymentMethod(startDate, endDate));
     }
 
     @Override
     @GetMapping("/count")
     public ResponseEntity<Long> getTotalPayments(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        if (startDate == null) startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        if (endDate == null) endDate = LocalDateTime.now();
         return ResponseEntity.ok(paymentService.countPayments(startDate, endDate));
     }
 

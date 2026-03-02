@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { generica } from "@/api/api";
 import { toast } from "react-toastify";
 import { FaPlus, FaSearch, FaTrash, FaEdit, FaEye, FaCamera, FaStar, FaGift, FaBirthdayCake, FaCrown, FaChartBar, FaUserCheck, FaUserTimes, FaHeart, FaHistory } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface Client {
   idClient: number;
@@ -21,6 +22,7 @@ interface Client {
   notes?: string;
   totalVisits?: number;
   totalSpent?: number;
+  address?: { idAddress?: number; street?: string; number?: number; neighborhood?: string; city?: string; state?: string; cep?: string };
 }
 
 const initialForm = {
@@ -98,10 +100,10 @@ export default function ClientesPage() {
   async function loadClientPhoto(id: number) {
     try {
       const res = await generica({ metodo: "GET", uri: `/client/${id}/photo`, responseType: "blob" });
-      if (res?.data) {
-        const url = typeof res.data === 'string' ? res.data : URL.createObjectURL(res.data);
+      if (res?.status === 200 && res?.data) {
+        const url = typeof res.data === 'string' ? res.data : URL.createObjectURL(res.data instanceof Blob ? res.data : new Blob([res.data]));
         setClientPhoto(url);
-      }
+      } else { setClientPhoto(null); }
     } catch { setClientPhoto(null); }
   }
 
@@ -205,6 +207,17 @@ export default function ClientesPage() {
   }
 
   async function deleteClientPhoto(clientId: number) {
+    const result = await Swal.fire({
+      title: "Remover foto?",
+      text: "Deseja remover a foto deste cliente?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, remover!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/client/${clientId}/photo` });
       if (res?.status === 200 || res?.status === 204) { toast.success("Foto removida!"); setClientPhoto(null); }
@@ -218,7 +231,14 @@ export default function ClientesPage() {
     setForm({
       name: c.name || "", email: c.email || "", phone: c.phone || "", cpf: c.cpf || "",
       birthDate: c.birthDate || "", gender: c.gender || "", notes: c.notes || "", password: "",
-      address: { street: "", number: 0, neighborhood: "", city: "", state: "", cep: "" },
+      address: {
+        street: c.address?.street || "",
+        number: c.address?.number || 0,
+        neighborhood: c.address?.neighborhood || "",
+        city: c.address?.city || "",
+        state: c.address?.state || "",
+        cep: c.address?.cep || "",
+      },
     });
     setEditingId(c.idClient);
     setModalOpen(true);
@@ -228,13 +248,17 @@ export default function ClientesPage() {
     e.preventDefault();
     if (!form.name) { toast.error("Preencha o nome"); return; }
     setSaving(true);
+    // Sanitize address CEP: strip non-digits (DB column is varchar(8))
+    const sanitizedAddress = form.address
+      ? { ...form.address, cep: form.address.cep?.replace(/\D/g, "").substring(0, 8) || "" }
+      : form.address;
     try {
       if (editingId) {
         const cleanedUpdateForm = {
           ...form,
           phone: form.phone ? form.phone.replace(/\D/g, "") : "",
           gender: form.gender || undefined,
-          address: (form.address?.street || form.address?.city) ? form.address : undefined,
+          address: (sanitizedAddress?.street || sanitizedAddress?.city) ? sanitizedAddress : undefined,
         };
         const fd = new FormData();
         fd.append("client", new Blob([JSON.stringify(cleanedUpdateForm)], { type: "application/json" }));
@@ -247,7 +271,7 @@ export default function ClientesPage() {
           ...form,
           phone: form.phone ? form.phone.replace(/\D/g, "") : "",
           gender: form.gender || undefined,
-          address: (form.address?.street || form.address?.city) ? form.address : undefined,
+          address: (sanitizedAddress?.street || sanitizedAddress?.city) ? sanitizedAddress : undefined,
         };
         const res = await generica({ metodo: "POST", uri: "/client/create-without-photo", data: cleanedForm });
         if (res?.status === 200 || res?.status === 201) {
@@ -265,7 +289,17 @@ export default function ClientesPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
+    const result = await Swal.fire({
+      title: "Tem certeza?",
+      text: "Deseja realmente excluir este cliente?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/client/${id}` });
       if (res?.status === 200 || res?.status === 204) { toast.success("Cliente excluído!"); loadClients(); }
@@ -429,8 +463,8 @@ export default function ClientesPage() {
               <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="gobarber-input" maxLength={11} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-              <input type="text" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} className="gobarber-input" maxLength={11} />
+              <label className="block text-sm font-medium text-gray-700 mb-1">CPF *</label>
+              <input type="text" value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value.replace(/\D/g, "") })} className="gobarber-input" maxLength={11} required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
@@ -464,7 +498,7 @@ export default function ClientesPage() {
               <input type="text" placeholder="Bairro" value={form.address.neighborhood} onChange={(e) => setForm({ ...form, address: { ...form.address, neighborhood: e.target.value } })} className="gobarber-input" />
               <input type="text" placeholder="Cidade" value={form.address.city} onChange={(e) => setForm({ ...form, address: { ...form.address, city: e.target.value } })} className="gobarber-input" />
               <input type="text" placeholder="UF" maxLength={2} value={form.address.state} onChange={(e) => setForm({ ...form, address: { ...form.address, state: e.target.value.toUpperCase() } })} className="gobarber-input" />
-              <input type="text" placeholder="CEP" maxLength={8} value={form.address.cep} onChange={(e) => setForm({ ...form, address: { ...form.address, cep: e.target.value } })} className="gobarber-input" />
+              <input type="text" placeholder="CEP" maxLength={9} value={form.address.cep} onChange={(e) => { const digits = e.target.value.replace(/\D/g, "").substring(0, 8); const fmt = digits.length > 5 ? digits.substring(0, 5) + "-" + digits.substring(5) : digits; setForm({ ...form, address: { ...form.address, cep: fmt } }); }} className="gobarber-input" />
             </div>
           </fieldset>
           <div>
@@ -506,6 +540,14 @@ export default function ClientesPage() {
               <div><span className="text-xs text-gray-500">Total Gasto</span><p className="font-medium text-[#E94560]">R$ {detailModal.totalSpent?.toFixed(2) || "0.00"}</p></div>
             </div>
             {detailModal.notes && <div><span className="text-xs text-gray-500">Observações</span><p className="text-sm mt-1">{detailModal.notes}</p></div>}
+            {(detailModal as any).address && ((detailModal as any).address.street || (detailModal as any).address.city) && (
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-xs text-gray-500 mb-1">Endereço</p>
+                <p className="font-medium text-sm">
+                  {[(detailModal as any).address.street, (detailModal as any).address.number ? `nº ${(detailModal as any).address.number}` : null, (detailModal as any).address.neighborhood, (detailModal as any).address.city, (detailModal as any).address.state, (detailModal as any).address.cep].filter(Boolean).join(", ")}
+                </p>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex flex-wrap gap-2 pt-3 border-t">

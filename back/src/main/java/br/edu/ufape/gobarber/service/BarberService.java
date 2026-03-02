@@ -51,7 +51,10 @@ public class BarberService {
 
             AddressCreateDTO addressCreateDTO = barberCreateDTO.getAddress();
 
-            Address address = addressService.creatAddress(addressCreateDTO);
+            Address address = null;
+            if (addressCreateDTO != null) {
+                address = addressService.creatAddress(addressCreateDTO);
+            }
 
             Barber barber = convertCreateDTOtoEntity(barberCreateDTO);
 
@@ -77,14 +80,19 @@ public class BarberService {
 
         AddressCreateDTO addressCreateDTO = barberCreateDTO.getAddress();
         Address address = barber.getAddress();
-        address.setStreet(addressCreateDTO.getStreet());
-        address.setNumber(addressCreateDTO.getNumber());
-        address.setNeighborhood(addressCreateDTO.getNeighborhood());
-        address.setCity(addressCreateDTO.getCity());
-        address.setState(addressCreateDTO.getState());
-        address.setCep(addressCreateDTO.getCep());
-
-        address = addressRepository.save(address);
+        if (addressCreateDTO != null) {
+            if (address == null) {
+                address = addressService.creatAddress(addressCreateDTO);
+            } else {
+                address.setStreet(addressCreateDTO.getStreet());
+                address.setNumber(addressCreateDTO.getNumber());
+                address.setNeighborhood(addressCreateDTO.getNeighborhood());
+                address.setCity(addressCreateDTO.getCity());
+                address.setState(addressCreateDTO.getState());
+                address.setCep(addressCreateDTO.getCep());
+                address = addressRepository.save(address);
+            }
+        }
 
         barber.setName(barberCreateDTO.getName());
         barber.setCpf(barberCreateDTO.getCpf());
@@ -92,10 +100,24 @@ public class BarberService {
         barber.setSalary(barberCreateDTO.getSalary());
         barber.setAdmissionDate(barberCreateDTO.getAdmissionDate());
         barber.setWorkload(barberCreateDTO.getWorkload());
+        barber.setContato(barberCreateDTO.getContato());
 
-        Barber barber2 = convertCreateDTOtoEntity(barberCreateDTO);
+        if (barberCreateDTO.getStart() != null && !barberCreateDTO.getStart().isEmpty()) {
+            barber.setStart(LocalTime.parse(barberCreateDTO.getStart(), DateTimeFormatter.ofPattern("HH:mm")));
+        }
+        if (barberCreateDTO.getEnd() != null && !barberCreateDTO.getEnd().isEmpty()) {
+            barber.setEnd(LocalTime.parse(barberCreateDTO.getEnd(), DateTimeFormatter.ofPattern("HH:mm")));
+        }
 
-        barber.setServices(barber2.getServices());
+        // Atualizar serviços diretamente (sem criar novo User/encodar senha)
+        List<Integer> idServices = barberCreateDTO.getIdServices();
+        if (idServices != null) {
+            Set<Services> services = new HashSet<>();
+            for (Integer serviceId : idServices) {
+                services.add(servicesService.getServiceEntity(serviceId));
+            }
+            barber.setServices(services);
+        }
 
         if (profilePhoto != null && !profilePhoto.isEmpty()) {
             try {
@@ -230,8 +252,10 @@ public class BarberService {
         List<Integer> idServices = barberCreateDTO.getIdServices();
         Set<Services> services = new HashSet<>();
 
-        for(Integer id : idServices){
-            services.add(servicesService.getServiceEntity(id));
+        if (idServices != null) {
+            for(Integer id : idServices){
+                services.add(servicesService.getServiceEntity(id));
+            }
         }
 
         barber.setServices(services);

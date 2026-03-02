@@ -20,15 +20,17 @@ import {
   FaChartBar,
   FaTimesCircle,
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 interface Notification {
-  id: number;
+  idNotification: number;
   title?: string;
   message?: string;
   type?: string;
   read?: boolean;
   createdAt?: string;
   clientId?: number;
+  client?: any;
 }
 
 export default function NotificacoesPage() {
@@ -68,8 +70,9 @@ export default function NotificacoesPage() {
         const allNotifs = [...(Array.isArray(pending) ? pending : []), ...(Array.isArray(recent) ? recent : [])];
         const seen = new Set<number>();
         data = allNotifs.filter((n: Notification) => {
-          if (seen.has(n.id)) return false;
-          seen.add(n.id);
+          const nid = n.idNotification;
+          if (nid == null || seen.has(nid)) return false;
+          seen.add(nid);
           return true;
         });
       } else {
@@ -104,7 +107,7 @@ export default function NotificacoesPage() {
     try {
       await generica({ metodo: "POST", uri: `/notification/${id}/read` });
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+        prev.map((n) => (n.idNotification === id ? { ...n, read: true } : n))
       );
     } catch {
       toast.error("Erro ao marcar notificação como lida");
@@ -123,9 +126,20 @@ export default function NotificacoesPage() {
   }
 
   async function deleteNotification(id: number) {
+    const result = await Swal.fire({
+      title: "Remover notificação?",
+      text: "Deseja remover esta notificação?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, remover!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       await generica({ metodo: "DELETE", uri: `/notification/${id}` });
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setNotifications((prev) => prev.filter((n) => n.idNotification !== id));
       toast.success("Notificação removida");
     } catch {
       toast.error("Erro ao remover notificação");
@@ -194,7 +208,17 @@ export default function NotificacoesPage() {
 
   async function deleteOldNotifications(daysOld: number = 30) {
     if (!userId) return;
-    if (!confirm(`Excluir notificações com mais de ${daysOld} dias?`)) return;
+    const result = await Swal.fire({
+      title: "Limpar notificações antigas?",
+      text: `Deseja excluir notificações com mais de ${daysOld} dias?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E94560",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
     try {
       const res = await generica({ metodo: "DELETE", uri: `/notification/client/${userId}/old`, params: { daysOld } });
       if (res?.status === 200 || res?.status === 204) {
@@ -266,7 +290,7 @@ export default function NotificacoesPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {Object.entries(notifStats).map(([key, value]) => (
               <div key={key} className="gobarber-card text-center py-3">
-                <p className="text-lg font-bold text-[#1A1A2E]">{String(value)}</p>
+                <p className="text-lg font-bold text-[#1A1A2E]">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</p>
                 <p className="text-xs text-gray-500">{key.replace(/([A-Z])/g, " $1").trim()}</p>
               </div>
             ))}
@@ -305,7 +329,7 @@ export default function NotificacoesPage() {
           ) : (
             filtered.map((notif) => (
               <div
-                key={notif.id}
+                key={notif.idNotification}
                 className={`gobarber-card flex items-start gap-4 transition ${!notif.read ? "border-l-4 border-l-[#E94560] bg-red-50/30" : ""}`}
               >
                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg shrink-0">
@@ -327,16 +351,16 @@ export default function NotificacoesPage() {
                 </div>
                 <div className="flex gap-1 shrink-0">
                   {!notif.read && (
-                    <button onClick={() => markAsRead(notif.id)} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Marcar como lida">
+                    <button onClick={() => markAsRead(notif.idNotification)} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Marcar como lida">
                       <FaCheck />
                     </button>
                   )}
                   {(isAdmin || isSecretary) && (
                     <>
-                      <button onClick={() => resendNotification(notif.id)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded" title="Reenviar">
+                      <button onClick={() => resendNotification(notif.idNotification)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded" title="Reenviar">
                         <FaRedo />
                       </button>
-                      <button onClick={() => deleteNotification(notif.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded" title="Excluir">
+                      <button onClick={() => deleteNotification(notif.idNotification)} className="p-1.5 text-red-500 hover:bg-red-50 rounded" title="Excluir">
                         <FaTrash />
                       </button>
                     </>
