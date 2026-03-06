@@ -9,7 +9,6 @@ import { toast } from "react-toastify";
 import {
   FaUser,
   FaPalette,
-  FaBell,
   FaShieldAlt,
   FaSave,
   FaBan,
@@ -444,7 +443,6 @@ export default function ConfiguracoesPage() {
   const baseTabs = [
     { key: "perfil", label: "Perfil", icon: <FaUser /> },
     { key: "aparencia", label: "Aparência", icon: <FaPalette /> },
-    { key: "notificacoes", label: "Notificações", icon: <FaBell /> },
     { key: "seguranca", label: "Segurança", icon: <FaShieldAlt /> },
   ];
 
@@ -1465,52 +1463,6 @@ export default function ConfiguracoesPage() {
                 </div>
               </div>
             )}
-
-            {activeTab === "notificacoes" && (
-              <div className="space-y-6">
-                <h2 className="text-lg font-semibold text-[#1A1A2E]">
-                  Notificações
-                </h2>
-                {[
-                  {
-                    label: "Novos agendamentos",
-                    desc: "Receber alerta quando um cliente agendar",
-                    default: true,
-                  },
-                  {
-                    label: "Cancelamentos",
-                    desc: "Receber alerta de cancelamentos",
-                    default: true,
-                  },
-                  {
-                    label: "Avaliações",
-                    desc: "Receber alerta de novas avaliações",
-                    default: false,
-                  },
-                  {
-                    label: "Relatórios semanais",
-                    desc: "Resumo semanal por e-mail",
-                    default: false,
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium text-[#1A1A2E]">{item.label}</p>
-                      <p className="text-sm text-gray-500">{item.desc}</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      defaultChecked={item.default}
-                      className="w-5 h-5 accent-[#E94560]"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
             {activeTab === "seguranca" && (
               <form onSubmit={handleChangePassword} className="space-y-6">
                 <h2 className="text-lg font-semibold text-[#1A1A2E]">
