@@ -342,15 +342,27 @@ public class AppointmentService {
             throw new DataBaseException("Usuário não encontrado");
         }
         
-        Client client = clientRepository.findByUser(user.get())
-                .orElseThrow(() -> new DataBaseException("Perfil de cliente não encontrado para este usuário"));
+        Optional<Client> client = clientRepository.findByUser(user.get());
         
         // Criar o agendamento com PENDING_APPROVAL
         Appointment appointment = new Appointment();
-        appointment.setClientName(client.getName());
-        appointment.setClientNumber(client.getPhone());
+        if (client.isPresent()) {
+            Client loggedClient = client.get();
+            appointment.setClient(loggedClient);
+            appointment.setClientName(loggedClient.getName());
+            appointment.setClientNumber(loggedClient.getPhone());
+        } else {
+            String fallbackClientName = requestDTO.getClientName() != null ? requestDTO.getClientName().trim() : "";
+            String fallbackClientNumber = requestDTO.getClientNumber() != null ? requestDTO.getClientNumber().trim() : "";
+
+            if (fallbackClientName.isBlank() || fallbackClientNumber.isBlank()) {
+                throw new AppointmentException("Nome e telefone do cliente sao obrigatorios para esta solicitacao");
+            }
+
+            appointment.setClientName(fallbackClientName);
+            appointment.setClientNumber(fallbackClientNumber);
+        }
         appointment.setBarber(barberService.getBarberEntity(requestDTO.getBarberId()));
-        appointment.setClient(client);
         appointment.setStatus(Appointment.AppointmentStatus.PENDING_APPROVAL);
         
         Set<Services> services = new HashSet<>();
@@ -594,3 +606,4 @@ public class AppointmentService {
         return dto;
     }
 }
+

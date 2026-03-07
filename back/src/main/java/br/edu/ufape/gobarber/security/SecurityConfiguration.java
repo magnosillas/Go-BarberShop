@@ -69,7 +69,7 @@ public class SecurityConfiguration {
                         .antMatchers("/address/**").hasAnyRole("ADMIN", "SECRETARY")
 
                         // Appointments - rotas específicas primeiro, depois genérica
-                        .antMatchers("/appointments/request").hasRole("CLIENT")
+                        .antMatchers("/appointments/request").hasAnyRole("ADMIN", "SECRETARY", "BARBER", "CLIENT")
                         .antMatchers("/appointments/my/**", "/appointments/my").hasRole("CLIENT")
                         .antMatchers("/appointments/history", "/appointments/future/barber/own").hasRole("BARBER")
                         .antMatchers("/appointments/pending").hasAnyRole("ADMIN", "SECRETARY")

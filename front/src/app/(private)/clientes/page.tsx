@@ -357,9 +357,7 @@ export default function ClientesPage() {
             { key: "top", label: "Top Clientes", icon: <FaStar />, fn: loadTopClients },
             { key: "spenders", label: "Top Gastos", icon: <FaChartBar />, fn: loadTopSpenders },
             { key: "inactive", label: "Inativos", icon: <FaUserTimes />, fn: loadInactive },
-            { key: "bday-today", label: "Aniversário Hoje", icon: <FaBirthdayCake />, fn: loadBirthdaysToday },
-            { key: "bday-month", label: "Aniversário Mês", fn: loadBirthdaysMonth },
-            { key: "bday-all", label: "Aniversários", fn: loadBirthdays },
+            { key: "bday-all", label: "Aniversário Mês", icon: <FaBirthdayCake />, fn: loadBirthdays },
             { key: "promo", label: "Para Promoções", icon: <FaGift />, fn: loadForPromotions },
           ].map(tab => (
             <button key={tab.key} onClick={() => { setActiveTab(tab.key); tab.fn(); }}
@@ -406,13 +404,6 @@ export default function ClientesPage() {
               />
             </div>
             <button onClick={handleAdvancedSearch} className="px-4 py-2 bg-[#E94560] text-white rounded-lg text-sm">Buscar</button>
-          </div>
-        </div>
-
-        <div className="gobarber-card">
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="text" placeholder="Buscar clientes por nome, email ou CPF..." value={search} onChange={(e) => setSearch(e.target.value)} className="gobarber-input pl-10" />
           </div>
         </div>
 
