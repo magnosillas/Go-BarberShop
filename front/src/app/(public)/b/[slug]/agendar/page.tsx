@@ -696,7 +696,7 @@ export default function BarbershopBookingPage() {
               Você receberá um email de confirmação assim que o agendamento for aprovado.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <Link href={`/b/${slug}`} className="gobarber-btn-outline px-6 py-2 w-full sm:w-auto text-center">
+              <Link href="/meus-agendamentos" className="gobarber-btn-outline px-6 py-2 w-full sm:w-auto text-center">
                 Voltar ao Início
               </Link>
               <button
