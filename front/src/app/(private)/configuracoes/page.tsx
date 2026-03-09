@@ -442,7 +442,7 @@ export default function ConfiguracoesPage() {
 
   const baseTabs = [
     { key: "perfil", label: "Perfil", icon: <FaUser /> },
-    { key: "aparencia", label: "Aparência", icon: <FaPalette /> },
+    // { key: "aparencia", label: "Aparência", icon: <FaPalette /> },
     { key: "seguranca", label: "Segurança", icon: <FaShieldAlt /> },
   ];
 
