@@ -37,8 +37,12 @@ public class SecurityConfiguration {
                         .antMatchers("/public/**").permitAll()
                         .antMatchers("/auth/logout").authenticated()
 
-                        // Stock - admin gerencia estoque
+                        // Stock - admin gerencia estoque; cliente consulta disponibilidade na Loja
+                        .antMatchers(HttpMethod.GET, "/stock/product/**").hasAnyRole("ADMIN", "CLIENT")
                         .antMatchers("/stock/**").hasRole("ADMIN")
+
+                        // Shop checkout - cliente finaliza carrinho
+                        .antMatchers(HttpMethod.POST, "/shop/checkout").hasAnyRole("ADMIN", "CLIENT")
 
                         // Services - GET para todos staff, escrita somente admin
                         .antMatchers(HttpMethod.GET, "/services/**").hasAnyRole("ADMIN", "BARBER", "SECRETARY")
