@@ -38,7 +38,8 @@ public class DashboardService {
 
         // === Financeiro ===
         Double revenue = paymentRepository.sumRevenueByDateRange(startDateTime, endDateTime);
-        if (revenue == null) revenue = 0.0;
+        if (revenue == null)
+            revenue = 0.0;
         dashboard.setTotalRevenue(revenue);
 
         Double prevRevenue = paymentRepository.sumRevenueByDateRange(prevStartDateTime, prevEndDateTime);
@@ -84,7 +85,7 @@ public class DashboardService {
         dashboard.setNewClients(newClients);
 
         dashboard.setReturningClients(totalClients - newClients);
-        
+
         if (totalClients > 0) {
             dashboard.setClientRetentionRate((dashboard.getReturningClients().doubleValue() / totalClients) * 100);
         } else {
@@ -124,13 +125,16 @@ public class DashboardService {
     private Double calculateOccupancyRate(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         // Cálculo simplificado: agendamentos / (barbeiros * dias * slots disponíveis)
         long barbers = barberRepository.count();
-        if (barbers == 0) return 0.0;
+        if (barbers == 0)
+            return 0.0;
 
-        long days = java.time.temporal.ChronoUnit.DAYS.between(startDateTime.toLocalDate(), endDateTime.toLocalDate()) + 1;
+        long days = java.time.temporal.ChronoUnit.DAYS.between(startDateTime.toLocalDate(), endDateTime.toLocalDate())
+                + 1;
         long slotsPerDay = 8; // Assumindo 8 slots de 1 hora por dia
 
         Long appointments = appointmentRepository.countByStartTimeBetween(startDateTime, endDateTime);
-        if (appointments == null) appointments = 0L;
+        if (appointments == null)
+            appointments = 0L;
 
         long totalSlots = barbers * days * slotsPerDay;
         return (appointments.doubleValue() / totalSlots) * 100;
@@ -138,28 +142,42 @@ public class DashboardService {
 
     private List<DashboardDTO.BarberPerformance> getTopBarbers(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         List<Object[]> data = paymentRepository.revenueByBarber(startDateTime, endDateTime);
-        
+
+        // Monta mapa de barberId -> count de agendamentos no período
+        Map<Integer, Long> appointmentMap = new HashMap<>();
+        appointmentRepository.countAppointmentsByBarber(startDateTime, endDateTime)
+                .forEach(row -> appointmentMap.put(((Number) row[0]).intValue(), ((Number) row[1]).longValue()));
+
         return data.stream()
                 .limit(5)
                 .map(row -> {
-                    Integer barberId = (Integer) row[0];
+                    Integer barberId = ((Number) row[0]).intValue();
                     Double avgRating = reviewRepository.averageRatingByBarber(barberId);
-                    
+
                     return DashboardDTO.BarberPerformance.builder()
                             .barberId(barberId)
                             .barberName((String) row[1])
                             .revenue(row[2] != null ? ((Number) row[2]).doubleValue() : 0.0)
                             .commission(row[3] != null ? ((Number) row[3]).doubleValue() : 0.0)
+                            .appointments(appointmentMap.getOrDefault(barberId, 0L))
                             .averageRating(avgRating != null ? avgRating : 0.0)
                             .build();
                 })
                 .collect(Collectors.toList());
     }
 
-    private List<DashboardDTO.ServicePerformance> getTopServices(LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        // Implementação simplificada - retorna lista vazia
-        // Em produção, criar query específica para serviços mais utilizados
-        return new ArrayList<>();
+    private List<DashboardDTO.ServicePerformance> getTopServices(LocalDateTime startDateTime,
+            LocalDateTime endDateTime) {
+        List<Object[]> data = appointmentRepository.findTopServicesByDateRange(
+                startDateTime, endDateTime, PageRequest.of(0, 5));
+
+        return data.stream()
+                .map(row -> DashboardDTO.ServicePerformance.builder()
+                        .serviceId(((Number) row[0]).intValue())
+                        .serviceName((String) row[1])
+                        .timesBooked(((Number) row[2]).longValue())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private List<DashboardDTO.ClientPerformance> getTopClients() {
@@ -177,20 +195,20 @@ public class DashboardService {
     private Map<String, Double> getRevenueByPaymentMethod(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         List<Object[]> data = paymentRepository.countAndSumByPaymentMethod(startDateTime, endDateTime);
         Map<String, Double> result = new HashMap<>();
-        
+
         for (Object[] row : data) {
             String method = row[0].toString();
             Double amount = row[2] != null ? ((Number) row[2]).doubleValue() : 0.0;
             result.put(method, amount);
         }
-        
+
         return result;
     }
 
     private Map<String, Long> getAppointmentsByDayOfWeek(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         // Implementação simplificada - retorna mapa com dias da semana
         Map<String, Long> result = new LinkedHashMap<>();
-        String[] days = {"Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"};
+        String[] days = { "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo" };
         for (String day : days) {
             result.put(day, 0L);
         }
@@ -208,7 +226,7 @@ public class DashboardService {
 
     private List<DashboardDTO.DailyRevenue> getDailyRevenue(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         List<Object[]> data = paymentRepository.dailyRevenue(startDateTime, endDateTime);
-        
+
         return data.stream()
                 .map(row -> DashboardDTO.DailyRevenue.builder()
                         .date(((java.sql.Date) row[0]).toLocalDate())
@@ -224,26 +242,26 @@ public class DashboardService {
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
         Map<String, Object> report = new HashMap<>();
-        
+
         report.put("totalRevenue", paymentRepository.sumRevenueByDateRange(startDateTime, endDateTime));
         report.put("averageTicket", paymentRepository.averageTicketByDateRange(startDateTime, endDateTime));
         report.put("totalTransactions", paymentRepository.countCompletedByDateRange(startDateTime, endDateTime));
         report.put("revenueByPaymentMethod", paymentRepository.countAndSumByPaymentMethod(startDateTime, endDateTime));
         report.put("revenueByBarber", paymentRepository.revenueByBarber(startDateTime, endDateTime));
         report.put("dailyRevenue", paymentRepository.dailyRevenue(startDateTime, endDateTime));
-        
+
         return report;
     }
 
     public Map<String, Object> getClientReport() {
         Map<String, Object> report = new HashMap<>();
-        
+
         report.put("totalClients", clientRepository.count());
         report.put("newClientsLast30Days", clientRepository.countNewClients(LocalDateTime.now().minusDays(30)));
         report.put("clientsByLoyaltyTier", clientRepository.countByLoyaltyTier());
         report.put("topSpenders", clientRepository.findTopSpenders(PageRequest.of(0, 10)).getContent());
         report.put("mostFrequent", clientRepository.findMostFrequent(PageRequest.of(0, 10)).getContent());
-        
+
         return report;
     }
 
@@ -252,12 +270,13 @@ public class DashboardService {
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
         Map<String, Object> report = new HashMap<>();
-        
-        report.put("revenue", paymentRepository.sumCommissionByBarberAndDateRange(barberId, startDateTime, endDateTime));
+
+        report.put("revenue",
+                paymentRepository.sumCommissionByBarberAndDateRange(barberId, startDateTime, endDateTime));
         report.put("averageRating", reviewRepository.averageRatingByBarber(barberId));
         report.put("totalReviews", reviewRepository.countByBarber(barberId));
         report.put("ratingDistribution", reviewRepository.ratingDistributionByBarber(barberId));
-        
+
         return report;
     }
 
@@ -283,7 +302,7 @@ public class DashboardService {
         Map<String, Object> result = new HashMap<>();
         LocalDateTime start = LocalDate.now().atStartOfDay();
         LocalDateTime end = LocalDate.now().atTime(LocalTime.MAX);
-        
+
         result.put("total", appointmentRepository.countByStartTimeBetween(start, end));
         result.put("date", LocalDate.now());
         return result;
@@ -305,7 +324,7 @@ public class DashboardService {
         Map<String, Object> result = new HashMap<>();
         LocalDateTime start = LocalDate.now().atStartOfDay();
         LocalDateTime end = LocalDateTime.now();
-        
+
         Double revenue = paymentRepository.sumRevenueByDateRange(start, end);
         result.put("revenue", revenue != null ? revenue : 0.0);
         result.put("timestamp", LocalDateTime.now());
@@ -314,10 +333,10 @@ public class DashboardService {
 
     public Map<String, Object> comparePeriods(LocalDate p1Start, LocalDate p1End, LocalDate p2Start, LocalDate p2End) {
         Map<String, Object> result = new HashMap<>();
-        
+
         DashboardDTO period1 = getDashboard(p1Start, p1End);
         DashboardDTO period2 = getDashboard(p2Start, p2End);
-        
+
         result.put("period1", period1);
         result.put("period2", period2);
         return result;
@@ -328,7 +347,7 @@ public class DashboardService {
         LocalDate thisMonthStart = now.withDayOfMonth(1);
         LocalDate lastMonthStart = thisMonthStart.minusMonths(1);
         LocalDate lastMonthEnd = thisMonthStart.minusDays(1);
-        
+
         return comparePeriods(thisMonthStart, now, lastMonthStart, lastMonthEnd);
     }
 
@@ -337,14 +356,14 @@ public class DashboardService {
         LocalDate thisYearStart = now.withDayOfYear(1);
         LocalDate lastYearStart = thisYearStart.minusYears(1);
         LocalDate lastYearEnd = thisYearStart.minusDays(1);
-        
+
         return comparePeriods(thisYearStart, now, lastYearStart, lastYearEnd);
     }
 
     public List<Map<String, Object>> getRevenueTrend(int days) {
         LocalDateTime end = LocalDateTime.now();
         LocalDateTime start = end.minusDays(days);
-        
+
         List<Object[]> data = paymentRepository.dailyRevenue(start, end);
         return data.stream()
                 .map(row -> {
@@ -368,25 +387,25 @@ public class DashboardService {
 
     public Map<String, Object> getKPIs() {
         Map<String, Object> kpis = new HashMap<>();
-        
+
         LocalDate today = LocalDate.now();
         LocalDate startOfMonth = today.withDayOfMonth(1);
         DashboardDTO dashboard = getDashboard(startOfMonth, today);
-        
+
         kpis.put("monthRevenue", dashboard.getTotalRevenue());
         kpis.put("totalClients", dashboard.getTotalClients());
         kpis.put("averageRating", dashboard.getAverageRating());
         kpis.put("occupancyRate", dashboard.getOccupancyRate());
-        
+
         return kpis;
     }
 
     public Map<String, Object> getBarberKPIs(Long barberId) {
         Map<String, Object> kpis = new HashMap<>();
-        
+
         kpis.put("averageRating", reviewRepository.averageRatingByBarber(barberId.intValue()));
         kpis.put("totalReviews", reviewRepository.countByBarber(barberId.intValue()));
-        
+
         return kpis;
     }
 }

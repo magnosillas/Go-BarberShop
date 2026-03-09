@@ -191,16 +191,16 @@ INSERT INTO product_stock (id_product, batch_number, quantity, expiration_date, 
 -- ==========================================
 -- SERVICO x PRODUTO (SERVICE_X_PRODUCT)
 -- ==========================================
-INSERT INTO service_x_product (id_service, id_product) VALUES
-(1, 11),   -- Corte usa Talco
-(2, 4),    -- Degrade usa Gel
-(3, 5),    -- Barba usa Oleo
-(3, 10),   -- Barba usa Pos-Barba
-(4, 5),    -- Corte+Barba usa Oleo
-(4, 10),   -- Corte+Barba usa Pos-Barba
-(4, 11),   -- Corte+Barba usa Talco
-(7, 9),    -- Hidratacao usa Condicionador
-(9, 13);   -- Platinado usa Tonico
+INSERT INTO service_x_product (id_service, id_product, quantity) VALUES
+(1, 11, 1),   -- Corte usa Talco
+(2, 4,  1),   -- Degrade usa Gel
+(3, 5,  1),   -- Barba usa Oleo
+(3, 10, 1),   -- Barba usa Pos-Barba
+(4, 5,  1),   -- Corte+Barba usa Oleo
+(4, 10, 1),   -- Corte+Barba usa Pos-Barba
+(4, 11, 1),   -- Corte+Barba usa Talco
+(7, 9,  1),   -- Hidratacao usa Condicionador
+(9, 13, 1);   -- Platinado usa Tonico
 
 -- ==========================================
 -- PROMOCOES (SALE)

@@ -15,40 +15,63 @@ import java.util.List;
 
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Integer> {
-    Page<Appointment> findAllByOrderByStartTimeAsc(Pageable pageable);
-    List<Appointment> findByBarberAndStartTimeBetween(Barber barber, LocalDateTime start, LocalDateTime end);
-    Page<Appointment> findByBarber(Barber barber, Pageable pageable);
-    Page<Appointment> findByBarberAndEndTimeBeforeOrderByStartTime(Pageable pageable, Barber barber, LocalDateTime dateTime);
-    Page<Appointment> findByStartTimeAfterOrderByStartTime(Pageable pageable, LocalDateTime dateTime);
-    Page<Appointment> findByBarberAndStartTimeAfterOrderByStartTime(Pageable pageable,  Barber barber, LocalDateTime dateTime);
-    
-    // Métodos para Dashboard
-    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.startTime BETWEEN :startDateTime AND :endDateTime")
-    Long countByStartTimeBetween(
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime);
-    
-    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.startTime < :dateTime")
-    Long countByStartTimeBefore(@Param("dateTime") LocalDateTime dateTime);
+        Page<Appointment> findAllByOrderByStartTimeAsc(Pageable pageable);
 
-    // Métodos para workflow de aprovação
-    Page<Appointment> findByStatusOrderByStartTimeAsc(Appointment.AppointmentStatus status, Pageable pageable);
+        List<Appointment> findByBarberAndStartTimeBetween(Barber barber, LocalDateTime start, LocalDateTime end);
 
-    Page<Appointment> findByStatusAndBarberOrderByStartTimeAsc(
-            Appointment.AppointmentStatus status, Barber barber, Pageable pageable);
+        Page<Appointment> findByBarber(Barber barber, Pageable pageable);
 
-    Page<Appointment> findByClientOrderByStartTimeDesc(Client client, Pageable pageable);
+        Page<Appointment> findByBarberAndEndTimeBeforeOrderByStartTime(Pageable pageable, Barber barber,
+                        LocalDateTime dateTime);
 
-    Page<Appointment> findByClientAndStatusOrderByStartTimeDesc(
-            Client client, Appointment.AppointmentStatus status, Pageable pageable);
+        Page<Appointment> findByStartTimeAfterOrderByStartTime(Pageable pageable, LocalDateTime dateTime);
 
-    // Buscar agendamentos confirmados de um barbeiro em um dia (para calcular disponibilidade)
-    @Query("SELECT a FROM Appointment a WHERE a.barber = :barber " +
-           "AND a.status IN ('CONFIRMED', 'PENDING_APPROVAL') " +
-           "AND a.startTime >= :dayStart AND a.startTime < :dayEnd " +
-           "ORDER BY a.startTime")
-    List<Appointment> findActiveAppointmentsByBarberAndDate(
-            @Param("barber") Barber barber,
-            @Param("dayStart") LocalDateTime dayStart,
-            @Param("dayEnd") LocalDateTime dayEnd);
+        Page<Appointment> findByBarberAndStartTimeAfterOrderByStartTime(Pageable pageable, Barber barber,
+                        LocalDateTime dateTime);
+
+        // Métodos para Dashboard
+        @Query("SELECT COUNT(a) FROM Appointment a WHERE a.startTime BETWEEN :startDateTime AND :endDateTime")
+        Long countByStartTimeBetween(
+                        @Param("startDateTime") LocalDateTime startDateTime,
+                        @Param("endDateTime") LocalDateTime endDateTime);
+
+        @Query("SELECT COUNT(a) FROM Appointment a WHERE a.startTime < :dateTime")
+        Long countByStartTimeBefore(@Param("dateTime") LocalDateTime dateTime);
+
+        // Métodos para workflow de aprovação
+        Page<Appointment> findByStatusOrderByStartTimeAsc(Appointment.AppointmentStatus status, Pageable pageable);
+
+        Page<Appointment> findByStatusAndBarberOrderByStartTimeAsc(
+                        Appointment.AppointmentStatus status, Barber barber, Pageable pageable);
+
+        Page<Appointment> findByClientOrderByStartTimeDesc(Client client, Pageable pageable);
+
+        Page<Appointment> findByClientAndStatusOrderByStartTimeDesc(
+                        Client client, Appointment.AppointmentStatus status, Pageable pageable);
+
+        // Buscar agendamentos confirmados de um barbeiro em um dia (para calcular
+        // disponibilidade)
+        @Query("SELECT a FROM Appointment a WHERE a.barber = :barber " +
+                        "AND a.status IN ('CONFIRMED', 'PENDING_APPROVAL') " +
+                        "AND a.startTime >= :dayStart AND a.startTime < :dayEnd " +
+                        "ORDER BY a.startTime")
+        List<Appointment> findActiveAppointmentsByBarberAndDate(
+                        @Param("barber") Barber barber,
+                        @Param("dayStart") LocalDateTime dayStart,
+                        @Param("dayEnd") LocalDateTime dayEnd);
+
+        @Query("SELECT s.id, s.name, COUNT(a) FROM Appointment a JOIN a.serviceType s " +
+                        "WHERE a.startTime BETWEEN :start AND :end " +
+                        "GROUP BY s.id, s.name ORDER BY COUNT(a) DESC")
+        List<Object[]> findTopServicesByDateRange(
+                        @Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end,
+                        org.springframework.data.domain.Pageable pageable);
+
+        @Query("SELECT a.barber.idBarber, COUNT(a) FROM Appointment a " +
+                        "WHERE a.startTime BETWEEN :start AND :end " +
+                        "GROUP BY a.barber.idBarber")
+        List<Object[]> countAppointmentsByBarber(
+                        @Param("start") LocalDateTime start,
+                        @Param("end") LocalDateTime end);
 }
