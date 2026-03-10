@@ -1,6 +1,7 @@
 "use client";
 
 import GoBarberLayout from "@/components/Layout/GoBarberLayout";
+import { formatCurrencyDisplay, parseCurrencyInput } from "@/lib/currency";
 import Modal from "@/components/Modal/Modal";
 import React, { useEffect, useState } from "react";
 import { generica } from "@/api/api";
@@ -37,7 +38,13 @@ interface StockEntry {
   idProduct: number;
 }
 
-const initialForm = { name: "", brand: "", description: "", price: 0, size: "" };
+const initialForm = {
+  name: "",
+  brand: "",
+  description: "",
+  price: 0,
+  size: "",
+};
 const initialStockForm = {
   batchNumber: "",
   quantity: 1,
@@ -94,12 +101,15 @@ export default function ProdutosPage() {
             });
             const stockData = sRes?.data?.content || sRes?.data || [];
             const entries = Array.isArray(stockData) ? stockData : [];
-            const totalQty = entries.reduce((sum: number, e: any) => sum + (e.quantity || 0), 0);
+            const totalQty = entries.reduce(
+              (sum: number, e: any) => sum + (e.quantity || 0),
+              0,
+            );
             return { ...p, quantity: totalQty };
           } catch {
             return { ...p, quantity: 0 };
           }
-        })
+        }),
       );
       setProducts(withStock);
     } catch {
@@ -133,13 +143,20 @@ export default function ProdutosPage() {
     try {
       const [prodRes, stockRes] = await Promise.all([
         generica({ metodo: "GET", uri: `/product/${id}` }),
-        generica({ metodo: "GET", uri: `/stock/product/${id}`, params: { page: 0, size: 100 } }).catch(() => null),
+        generica({
+          metodo: "GET",
+          uri: `/stock/product/${id}`,
+          params: { page: 0, size: 100 },
+        }).catch(() => null),
       ]);
       const prod = prodRes?.data || null;
       if (prod) {
         const stockData = stockRes?.data?.content || stockRes?.data || [];
         const entries = Array.isArray(stockData) ? stockData : [];
-        const totalQty = entries.reduce((sum: number, e: any) => sum + (e.quantity || 0), 0);
+        const totalQty = entries.reduce(
+          (sum: number, e: any) => sum + (e.quantity || 0),
+          0,
+        );
         setDetailProduct({ ...prod, quantity: totalQty });
       }
     } catch {
@@ -488,7 +505,7 @@ export default function ProdutosPage() {
                                 <td className="py-2 px-2 hidden sm:table-cell">
                                   {s.acquisitionDate
                                     ? new Date(
-                                        s.acquisitionDate
+                                        s.acquisitionDate,
                                       ).toLocaleDateString("pt-BR")
                                     : "—"}
                                 </td>
@@ -502,7 +519,7 @@ export default function ProdutosPage() {
                                         <FaExclamationTriangle className="text-xs" />
                                       )}
                                       {new Date(
-                                        s.expirationDate
+                                        s.expirationDate,
                                       ).toLocaleDateString("pt-BR")}
                                     </span>
                                   ) : (
@@ -597,11 +614,14 @@ export default function ProdutosPage() {
                 Preço (R$) *
               </label>
               <input
-                type="number"
-                step="0.01"
-                value={form.price}
+                type="text"
+                inputMode="numeric"
+                value={formatCurrencyDisplay(form.price)}
                 onChange={(e) =>
-                  setForm({ ...form, price: parseFloat(e.target.value) || 0 })
+                  setForm({
+                    ...form,
+                    price: parseCurrencyInput(e.target.value),
+                  })
                 }
                 className="gobarber-input"
                 required
@@ -628,7 +648,11 @@ export default function ProdutosPage() {
             >
               Cancelar
             </button>
-            <button type="submit" disabled={saving} className="gobarber-btn-primary">
+            <button
+              type="submit"
+              disabled={saving}
+              className="gobarber-btn-primary"
+            >
               {saving ? "Salvando..." : editingId ? "Atualizar" : "Cadastrar"}
             </button>
           </div>
@@ -716,7 +740,11 @@ export default function ProdutosPage() {
             >
               Cancelar
             </button>
-            <button type="submit" disabled={savingStock} className="gobarber-btn-primary">
+            <button
+              type="submit"
+              disabled={savingStock}
+              className="gobarber-btn-primary"
+            >
               {savingStock
                 ? "Salvando..."
                 : editingStockId
@@ -728,80 +756,124 @@ export default function ProdutosPage() {
       </Modal>
 
       {/* Modal Detalhe Produto (GET /product/{id}) */}
-      <Modal isOpen={!!detailProduct} onClose={() => setDetailProduct(null)} title="Detalhe do Produto">
+      <Modal
+        isOpen={!!detailProduct}
+        onClose={() => setDetailProduct(null)}
+        title="Detalhe do Produto"
+      >
         {loadingDetail ? (
-          <div className="flex justify-center py-8"><span className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E94560]" /></div>
-        ) : detailProduct && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#E94560] to-[#0F3460] flex items-center justify-center text-white text-lg font-bold">
-                {detailProduct.name?.charAt(0)?.toUpperCase() || "P"}
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg text-[#1A1A2E]">{detailProduct.name}</h3>
-                <p className="text-sm text-gray-500">{detailProduct.brand || "Sem marca"}</p>
-              </div>
-            </div>
-            {detailProduct.description && <p className="text-gray-600 text-sm">{detailProduct.description}</p>}
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500">Preço</p>
-                <p className="text-lg font-bold text-[#E94560]">R$ {detailProduct.price?.toFixed(2) || "0.00"}</p>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500">Estoque Total</p>
-                <p className="text-lg font-bold text-[#1A1A2E]">{detailProduct.quantity ?? 0} un</p>
-              </div>
-              {detailProduct.size && (
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500">Tamanho</p>
-                  <p className="font-medium">{detailProduct.size}</p>
-                </div>
-              )}
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500">ID</p>
-                <p className="font-medium">#{detailProduct.id}</p>
-              </div>
-            </div>
+          <div className="flex justify-center py-8">
+            <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E94560]" />
           </div>
+        ) : (
+          detailProduct && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#E94560] to-[#0F3460] flex items-center justify-center text-white text-lg font-bold">
+                  {detailProduct.name?.charAt(0)?.toUpperCase() || "P"}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg text-[#1A1A2E]">
+                    {detailProduct.name}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {detailProduct.brand || "Sem marca"}
+                  </p>
+                </div>
+              </div>
+              {detailProduct.description && (
+                <p className="text-gray-600 text-sm">
+                  {detailProduct.description}
+                </p>
+              )}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">Preço</p>
+                  <p className="text-lg font-bold text-[#E94560]">
+                    R$ {detailProduct.price?.toFixed(2) || "0.00"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">Estoque Total</p>
+                  <p className="text-lg font-bold text-[#1A1A2E]">
+                    {detailProduct.quantity ?? 0} un
+                  </p>
+                </div>
+                {detailProduct.size && (
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500">Tamanho</p>
+                    <p className="font-medium">{detailProduct.size}</p>
+                  </div>
+                )}
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">ID</p>
+                  <p className="font-medium">#{detailProduct.id}</p>
+                </div>
+              </div>
+            </div>
+          )
         )}
       </Modal>
 
       {/* Modal Detalhe Estoque (GET /stock/{id}) */}
-      <Modal isOpen={!!detailStock} onClose={() => setDetailStock(null)} title="Detalhe do Lote">
+      <Modal
+        isOpen={!!detailStock}
+        onClose={() => setDetailStock(null)}
+        title="Detalhe do Lote"
+      >
         {loadingDetail ? (
-          <div className="flex justify-center py-8"><span className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E94560]" /></div>
-        ) : detailStock && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500">Número do Lote</p>
-                <p className="font-medium">{detailStock.batchNumber || "—"}</p>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500">Quantidade</p>
-                <p className="text-lg font-bold text-[#1A1A2E]">{detailStock.quantity}</p>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500">Data de Aquisição</p>
-                <p className="font-medium">{detailStock.acquisitionDate ? new Date(detailStock.acquisitionDate).toLocaleDateString("pt-BR") : "—"}</p>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500">Validade</p>
-                <p className={`font-medium ${isExpired(detailStock.expirationDate) ? "text-red-600" : isExpiringSoon(detailStock.expirationDate) ? "text-yellow-600" : ""}`}>
-                  {detailStock.expirationDate ? new Date(detailStock.expirationDate).toLocaleDateString("pt-BR") : "—"}
-                </p>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500">ID Produto</p>
-                <p className="font-medium">#{detailStock.idProduct}</p>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-xs text-gray-500">ID Estoque</p>
-                <p className="font-medium">#{detailStock.idStock}</p>
+          <div className="flex justify-center py-8">
+            <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E94560]" />
+          </div>
+        ) : (
+          detailStock && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">Número do Lote</p>
+                  <p className="font-medium">
+                    {detailStock.batchNumber || "—"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">Quantidade</p>
+                  <p className="text-lg font-bold text-[#1A1A2E]">
+                    {detailStock.quantity}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">Data de Aquisição</p>
+                  <p className="font-medium">
+                    {detailStock.acquisitionDate
+                      ? new Date(
+                          detailStock.acquisitionDate,
+                        ).toLocaleDateString("pt-BR")
+                      : "—"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">Validade</p>
+                  <p
+                    className={`font-medium ${isExpired(detailStock.expirationDate) ? "text-red-600" : isExpiringSoon(detailStock.expirationDate) ? "text-yellow-600" : ""}`}
+                  >
+                    {detailStock.expirationDate
+                      ? new Date(detailStock.expirationDate).toLocaleDateString(
+                          "pt-BR",
+                        )
+                      : "—"}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">ID Produto</p>
+                  <p className="font-medium">#{detailStock.idProduct}</p>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500">ID Estoque</p>
+                  <p className="font-medium">#{detailStock.idStock}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )
         )}
       </Modal>
     </GoBarberLayout>
